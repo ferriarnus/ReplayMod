@@ -2,8 +2,8 @@ package com.replaymod.replay.camera;
 
 import de.johni0702.minecraft.gui.utils.lwjgl.vector.Vector3f;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.options.GameOptions;
-import net.minecraft.client.options.KeyBinding;
+import net.minecraft.client.option.GameOptions;
+import net.minecraft.client.option.KeyBinding;
 
 /**
  * Camera controller performing vanilla creative-like camera movements.
@@ -26,12 +26,12 @@ public class VanillaCameraController implements CameraController {
     public VanillaCameraController(MinecraftClient mc, CameraEntity camera) {
         this.camera = camera;
         GameOptions gameSettings = mc.options;
-        this.bindings[0] = gameSettings.keyForward;
-        this.bindings[1] = gameSettings.keyBack;
-        this.bindings[2] = gameSettings.keyLeft;
-        this.bindings[3] = gameSettings.keyRight;
-        this.bindings[4] = gameSettings.keyJump;
-        this.bindings[5] = gameSettings.keySneak;
+        this.bindings[0] = gameSettings.forwardKey;
+        this.bindings[1] = gameSettings.backKey;
+        this.bindings[2] = gameSettings.leftKey;
+        this.bindings[3] = gameSettings.rightKey;
+        this.bindings[4] = gameSettings.jumpKey;
+        this.bindings[5] = gameSettings.sneakKey;
     }
 
     @Override
@@ -45,7 +45,7 @@ public class VanillaCameraController implements CameraController {
         }
         if (direction.length() == 0) return;
         direction.normalise(direction); // Normalize, so we don't move quicker if we hold down multiple keys
-        double yawRadians = Math.toRadians(camera.yaw);
+        double yawRadians = Math.toRadians(camera.getYaw());
         float yawSin = (float) Math.sin(yawRadians), yawCos = (float) Math.cos(yawRadians);
         // Rotate by yaw
         direction.set(

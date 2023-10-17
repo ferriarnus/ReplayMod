@@ -84,7 +84,7 @@ public class GuiCreateScreenshot extends GuiRenderSettings implements Loadable {
     @Override
     public void close() {
         super.close();
-        getMinecraft().openScreen(null);
+        getMinecraft().setScreen(null);
     }
 
     @Override

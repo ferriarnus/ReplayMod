@@ -21,7 +21,7 @@ import com.replaymod.replay.handler.GuiHandler;
 import com.replaymod.replaystudio.data.Marker;
 import com.replaymod.replaystudio.replay.ReplayFile;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.options.KeyBinding;
+import net.minecraft.client.option.KeyBinding;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -69,8 +69,8 @@ public class ReplayModReplay implements Module {
                         marker.setX(camera.getX());
                         marker.setY(camera.getY());
                         marker.setZ(camera.getZ());
-                        marker.setYaw(camera.yaw);
-                        marker.setPitch(camera.pitch);
+                        marker.setYaw(camera.getYaw());
+                        marker.setPitch(camera.getPitch());
                         marker.setRoll(camera.roll);
                         replayHandler.getOverlay().timeline.addMarker(marker);
                     }
@@ -108,7 +108,7 @@ public class ReplayModReplay implements Module {
                             t.printStackTrace();
                             core.printWarningToChat("replaymod.chat.failedthumb");
                         }
-                    });
+                    }, Runnable::run);
                 }
             }
         }, true);

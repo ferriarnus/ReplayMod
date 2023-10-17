@@ -4,7 +4,7 @@ import net.minecraft.util.Identifier;
 
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
-import net.minecraft.util.registry.Registry;
+import net.minecraft.registry.Registry;
 
 import java.util.*;
 import java.util.function.Function;
@@ -16,7 +16,7 @@ class ModInfoGetter {
                 .map(ModContainer::getMetadata)
                 .map(m -> new ModInfo(m.getId(), m.getName(), m.getVersion().toString()))
                 .collect(Collectors.toMap(ModInfo::getId, Function.identity()));
-        return Registry.REGISTRIES.stream()
+        return net.minecraft.registry.Registries.REGISTRIES.stream()
                 .map(Registry::getIds).flatMap(Set::stream)
                 .map(Identifier::getNamespace).filter(s -> !s.equals("minecraft")).distinct()
                 .map(modInfoMap::get).filter(Objects::nonNull)

@@ -25,18 +25,18 @@ public abstract class Mixin_BlockOnChunkRebuilds implements ForceChunkLoadingHoo
     @Shadow @Final private Queue<BlockBufferBuilderStorage> threadBuffers;
 
     //#if MC>=11800
-    //$$ @org.spongepowered.asm.mixin.Unique
-    //$$ private boolean upload() {
-    //$$     boolean anything = false;
-    //$$     Runnable runnable;
-    //$$     while ((runnable = this.uploadQueue.poll()) != null) {
-    //$$         runnable.run();
-    //$$         anything = true;
-    //$$     }
-    //$$     return anything;
-    //$$ }
+    @org.spongepowered.asm.mixin.Unique
+    private boolean upload() {
+        boolean anything = false;
+        Runnable runnable;
+        while ((runnable = this.uploadQueue.poll()) != null) {
+            runnable.run();
+            anything = true;
+        }
+        return anything;
+    }
     //#else
-    @Shadow public abstract boolean upload();
+    //$$ @Shadow public abstract boolean upload();
     //#endif
 
     @Shadow @Final private TaskExecutor<Runnable> mailbox;

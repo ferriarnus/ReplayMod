@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 //#if MC>=11500
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.client.util.math.Vector3f;
+import org.joml.Vector3f;
 //#else
 //$$ import org.lwjgl.opengl.GL11;
 //#endif
@@ -79,7 +79,7 @@ public abstract class Mixin_Omnidirectional_Rotation {
                     break;
             }
             //#if MC>=11500
-            matrixStack.multiply(new Vector3f(x, y, 0).getDegreesQuaternion(angle));
+            matrixStack.multiply(new org.joml.Quaternionf().fromAxisAngleDeg(new Vector3f(x, y, 0), angle));
             //#else
             //$$ GL11.glRotatef(angle, x, y, 0);
             //#endif

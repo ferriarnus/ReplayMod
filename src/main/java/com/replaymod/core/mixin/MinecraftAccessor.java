@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 import java.util.Queue;
 
 //#if MC>=11800
-//$$ import java.util.function.Supplier;
+import java.util.function.Supplier;
 //#endif
 
 //#if MC>=11400
@@ -52,11 +52,11 @@ public interface MinecraftAccessor {
     //$$ Queue<FutureTask<?>> getScheduledTasks();
     //#endif
 
-    @Accessor("crashReport")
+    @Accessor("crashReportSupplier")
     //#if MC>=11800
-    //$$ Supplier<CrashReport> getCrashReporter();
+    Supplier<CrashReport> getCrashReporter();
     //#else
-    CrashReport getCrashReporter();
+    //$$ CrashReport getCrashReporter();
     //#endif
 
     //#if MC<11400
@@ -65,7 +65,7 @@ public interface MinecraftAccessor {
     //#endif
 
     //#if MC>=11400
-    @Accessor
+    @Accessor("integratedServerConnection")
     void setConnection(ClientConnection connection);
     //#endif
 }

@@ -35,8 +35,8 @@ import net.fabricmc.loader.api.ModContainer;
 //#endif
 
 //#if MC>=11903
-//$$ import java.util.Objects;
-//$$ import net.minecraft.resource.InputSupplier;
+import java.util.Objects;
+import net.minecraft.resource.InputSupplier;
 //#endif
 
 //#if MC>=11400
@@ -65,9 +65,9 @@ public class LangResourcePack extends AbstractFileResourcePack {
     private final Path basePath;
     public LangResourcePack() {
         //#if MC>=11903
-        //$$ super(NAME, true);
+        super(NAME, true);
         //#else
-        super(new File(NAME));
+        //$$ super(new File(NAME));
         //#endif
 
         //#if FABRIC>=1
@@ -121,35 +121,35 @@ public class LangResourcePack extends AbstractFileResourcePack {
     }
 
     //#if MC>=11903
-    //$$ @Override
-    //$$ public InputSupplier<InputStream> openRoot(String... segments) {
-    //$$     byte[] bytes;
-    //$$     try {
-    //$$         bytes = readFile(String.join("/", segments));
-    //$$     } catch (IOException e) {
-    //$$         throw new RuntimeException(e);
-    //$$     }
-    //$$     if (bytes == null) {
-    //$$         return null;
-    //$$     }
-    //$$     return () -> new ByteArrayInputStream(bytes);
-    //$$ }
+    @Override
+    public InputSupplier<InputStream> openRoot(String... segments) {
+        byte[] bytes;
+        try {
+            bytes = readFile(String.join("/", segments));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        if (bytes == null) {
+            return null;
+        }
+        return () -> new ByteArrayInputStream(bytes);
+    }
     //#endif
 
     //#if MC>=11903
-    //$$ @Override
-    //$$ public InputSupplier<InputStream> open(ResourceType type, Identifier id) {
-    //$$     return openRoot(type.getDirectory(), id.getNamespace(), id.getPath());
-    //$$ }
-    //#else
     @Override
-    protected InputStream openFile(String path) throws IOException {
-        byte[] bytes = readFile(path);
-        if (bytes == null) {
-            throw new net.minecraft.resource.ResourceNotFoundException(this.base, path);
-        }
-        return new ByteArrayInputStream(bytes);
+    public InputSupplier<InputStream> open(ResourceType type, Identifier id) {
+        return openRoot(type.getDirectory(), id.getNamespace(), id.getPath());
     }
+    //#else
+    //$$ @Override
+    //$$ protected InputStream openFile(String path) throws IOException {
+    //$$     byte[] bytes = readFile(path);
+    //$$     if (bytes == null) {
+    //$$         throw new net.minecraft.resource.ResourceNotFoundException(this.base, path);
+    //$$     }
+    //$$     return new ByteArrayInputStream(bytes);
+    //$$ }
     //#endif
 
     private byte[] readFile(String path) throws IOException {
@@ -187,46 +187,46 @@ public class LangResourcePack extends AbstractFileResourcePack {
 
     //#if MC>=11903
     //#else
-    @Override
-    protected boolean containsFile(String path) {
-        Path langPath = langPath(path);
-        return langPath != null && Files.exists(langPath);
-    }
+    //$$ @Override
+    //$$ protected boolean containsFile(String path) {
+    //$$     Path langPath = langPath(path);
+    //$$     return langPath != null && Files.exists(langPath);
+    //$$ }
     //#endif
 
 
     //#if MC>=11903
-    //$$ @Override
-    //$$ public void findResources(ResourceType type, String namespace, String prefix, ResultConsumer consumer) {
-    //$$     findResources(type, prefix, id -> consumer.accept(id, () -> new ByteArrayInputStream(Objects.requireNonNull(readFile(id.getPath())))));
-    //$$ }
-    //#else
     @Override
-    public Collection<Identifier> findResources(
-            ResourceType resourcePackType,
+    public void findResources(ResourceType type, String namespace, String prefix, ResultConsumer consumer) {
+        findResources(type, prefix, id -> consumer.accept(id, () -> new ByteArrayInputStream(Objects.requireNonNull(readFile(id.getPath())))));
+    }
+    //#else
+    //$$ @Override
+    //$$ public Collection<Identifier> findResources(
+    //$$         ResourceType resourcePackType,
             //#if MC>=11500
-            String namespace,
+            //$$ String namespace,
             //#endif
-            String path,
+    //$$         String path,
             //#if MC>=11900
             //$$ Predicate<Identifier> filter
             //#else
-            int maxDepth,
-            Predicate<String> pathFilter
+            //$$ int maxDepth,
+            //$$ Predicate<String> pathFilter
             //#endif
-    ) {
+    //$$ ) {
         //#if MC<11900
-        Predicate<Identifier> filter = id -> pathFilter.test(id.getPath());
+        //$$ Predicate<Identifier> filter = id -> pathFilter.test(id.getPath());
         //#endif
-
-        List<Identifier> result = new ArrayList<>();
-        findResources(resourcePackType, path, id -> {
-            if (filter.test(id)) {
-                result.add(id);
-            }
-        });
-        return result;
-    }
+    //$$
+    //$$     List<Identifier> result = new ArrayList<>();
+    //$$     findResources(resourcePackType, path, id -> {
+    //$$         if (filter.test(id)) {
+    //$$             result.add(id);
+    //$$         }
+    //$$     });
+    //$$     return result;
+    //$$ }
     //#endif
 
     private void findResources(ResourceType type, String path, Consumer<Identifier> consumer) {

@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 //#if MC>=11400
 // FIXME: preprocessor should be able to remap between fabric and forge
 //#if FABRIC
-@Mixin(targets = "net.minecraft.world.border.WorldBorder.MovingArea")
+@Mixin(targets = "net.minecraft.world.border.WorldBorder$MovingArea")
 //#else
 //$$ @Mixin(targets = "net.minecraft.world.border.WorldBorder.MovingBorderInfo")
 //#endif

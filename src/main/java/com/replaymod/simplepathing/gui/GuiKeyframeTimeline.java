@@ -37,8 +37,8 @@ import static de.johni0702.minecraft.gui.versions.MCVer.pushScissorState;
 import static de.johni0702.minecraft.gui.versions.MCVer.setScissorDisabled;
 
 //#if MC>=11700
-//$$ import com.mojang.blaze3d.systems.RenderSystem;
-//$$ import net.minecraft.client.render.GameRenderer;
+import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraft.client.render.GameRenderer;
 //#endif
 
 public class GuiKeyframeTimeline extends AbstractGuiTimeline<GuiKeyframeTimeline> implements Draggable {
@@ -154,7 +154,7 @@ public class GuiKeyframeTimeline extends AbstractGuiTimeline<GuiKeyframeTimeline
                     final int color = 0xff0000ff;
                     Tessellator tessellator = Tessellator.getInstance();
                     BufferBuilder buffer = tessellator.getBuffer();
-                    buffer.begin(GL11.GL_LINE_STRIP, VertexFormats.POSITION_COLOR);
+                    buffer.begin(net.minecraft.client.render.VertexFormat.DrawMode.LINE_STRIP, VertexFormats.LINES);
 
                     // Start just below the top border of the replay timeline
                     Vector2f p1 = new Vector2f(replayTimelineLeft + positionXReplayTimeline, replayTimelineTop + BORDER_TOP);
@@ -170,19 +170,19 @@ public class GuiKeyframeTimeline extends AbstractGuiTimeline<GuiKeyframeTimeline
                     emitLine(buffer, p3, p4, color);
 
                     //#if MC>=11700
-                    //$$ RenderSystem.setShader(GameRenderer::getRenderTypeLinesShader);
+                    RenderSystem.setShader(GameRenderer::getRenderTypeLinesProgram);
                     //#else
-                    GL11.glEnable(GL11.GL_LINE_SMOOTH);
-                    GL11.glDisable(GL11.GL_TEXTURE_2D);
+                    //$$ GL11.glEnable(GL11.GL_LINE_SMOOTH);
+                    //$$ GL11.glDisable(GL11.GL_TEXTURE_2D);
                     //#endif
                     pushScissorState();
                     setScissorDisabled();
-                    GL11.glLineWidth(2);
+                    com.mojang.blaze3d.systems.RenderSystem.lineWidth(2);
                     tessellator.draw();
                     popScissorState();
                     //#if MC<11700
-                    GL11.glEnable(GL11.GL_TEXTURE_2D);
-                    GL11.glDisable(GL11.GL_LINE_SMOOTH);
+                    //$$ GL11.glEnable(GL11.GL_TEXTURE_2D);
+                    //$$ GL11.glDisable(GL11.GL_LINE_SMOOTH);
                     //#endif
                 }
             }

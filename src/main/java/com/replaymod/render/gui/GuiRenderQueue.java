@@ -54,7 +54,7 @@ import java.util.stream.Collectors;
 import static com.replaymod.render.ReplayModRender.LOGGER;
 
 //#if MC>=11400
-import net.minecraft.text.TranslatableText;
+import net.minecraft.text.TranslatableTextContent;
 //#else
 //$$ import com.replaymod.replaystudio.util.I18n;
 //#endif
@@ -170,7 +170,7 @@ public class GuiRenderQueue extends AbstractGuiPopup<GuiRenderQueue> implements 
         MinecraftClient mc = MCVer.getMinecraft();
 
         // Close all GUIs (so settings in GuiRenderSettings are saved)
-        mc.openScreen(null);
+        mc.setScreen(null);
         // Start rendering
         int jobsDone = 0;
         for (RenderJob renderJob : queue) {
@@ -180,7 +180,7 @@ public class GuiRenderQueue extends AbstractGuiPopup<GuiRenderQueue> implements 
                 videoRenderer.renderVideo();
             } catch (FFmpegWriter.NoFFmpegException e) {
                 LOGGER.error("Rendering video:", e);
-                mc.openScreen(new GuiNoFfmpeg(container::display).toMinecraft());
+                mc.setScreen(new GuiNoFfmpeg(container::display).toMinecraft());
                 return;
             } catch (FFmpegWriter.FFmpegStartupException e) {
                 int jobsToSkip = jobsDone;

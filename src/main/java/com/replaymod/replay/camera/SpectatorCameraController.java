@@ -2,7 +2,7 @@ package com.replaymod.replay.camera;
 
 import com.replaymod.replay.ReplayModReplay;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.options.KeyBinding;
+import net.minecraft.client.option.KeyBinding;
 import net.minecraft.entity.Entity;
 
 //#if MC>=11400
@@ -24,14 +24,14 @@ public class SpectatorCameraController implements CameraController {
     @Override
     public void update(float partialTicksPassed) {
         MinecraftClient mc = getMinecraft();
-        if (mc.options.keySneak.wasPressed()) {
+        if (mc.options.sneakKey.wasPressed()) {
             ReplayModReplay.instance.getReplayHandler().spectateCamera();
         }
 
         // Soak up all remaining key presses
-        for (KeyBinding binding : Arrays.asList(mc.options.keyAttack, mc.options.keyUse,
-                mc.options.keyJump, mc.options.keySneak, mc.options.keyForward,
-                mc.options.keyBack, mc.options.keyLeft, mc.options.keyRight)) {
+        for (KeyBinding binding : Arrays.asList(mc.options.attackKey, mc.options.useKey,
+                mc.options.jumpKey, mc.options.sneakKey, mc.options.forwardKey,
+                mc.options.backKey, mc.options.leftKey, mc.options.rightKey)) {
             //noinspection StatementWithEmptyBody
             while (binding.wasPressed());
         }

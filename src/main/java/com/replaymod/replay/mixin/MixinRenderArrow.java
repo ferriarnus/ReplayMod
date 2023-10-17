@@ -8,9 +8,9 @@ import net.minecraft.entity.Entity;
 import org.spongepowered.asm.mixin.Mixin;
 
 //#if MC>=11700
-//$$ import net.minecraft.client.render.entity.EntityRendererFactory.Context;
+import net.minecraft.client.render.entity.EntityRendererFactory.Context;
 //#else
-import net.minecraft.client.render.entity.EntityRenderDispatcher;
+//$$ import net.minecraft.client.render.entity.EntityRenderDispatcher;
 //#endif
 
 //#if MC>=11500
@@ -22,13 +22,13 @@ import net.minecraft.client.render.Frustum;
 @Mixin(ArrowEntityRenderer.class)
 public abstract class MixinRenderArrow extends EntityRenderer {
     //#if MC>=11700
-    //$$ protected MixinRenderArrow(Context context) {
-    //$$     super(context);
-    //$$ }
-    //#else
-    protected MixinRenderArrow(EntityRenderDispatcher renderManager) {
-        super(renderManager);
+    protected MixinRenderArrow(Context context) {
+        super(context);
     }
+    //#else
+    //$$ protected MixinRenderArrow(EntityRenderDispatcher renderManager) {
+    //$$     super(renderManager);
+    //$$ }
     //#endif
 
     @SuppressWarnings("unchecked")

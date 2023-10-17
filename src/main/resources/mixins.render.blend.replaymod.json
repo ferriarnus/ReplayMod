@@ -21,10 +21,10 @@
     //#endif
     "ParticleAccessor",
     //#if MC<11900
-    "MixinRenderGlobal",
-    "MixinRenderItem",
-    "MixinRenderLivingBase",
-    "MixinRenderManager"
+    //$$ "MixinRenderGlobal",
+    //$$ "MixinRenderItem",
+    //$$ "MixinRenderLivingBase",
+    //$$ "MixinRenderManager"
     //#endif
     //#endif
   ],

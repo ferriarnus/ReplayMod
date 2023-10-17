@@ -19,7 +19,7 @@ import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket;
 import net.minecraft.network.packet.s2c.play.PlayerSpawnS2CPacket;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.network.Packet;
+import net.minecraft.network.packet.Packet;
 import net.minecraft.server.integrated.IntegratedServer;
 // FIXME not (yet?) 1.13 import net.minecraftforge.event.entity.minecart.MinecartInteractEvent;
 
@@ -105,9 +105,9 @@ public class RecordingEventHandler extends EventRegistrations {
             assert player != null;
             packetListener.save(new PlayerSpawnS2CPacket(player));
             //#if MC>=11903
-            //$$ packetListener.save(new EntityTrackerUpdateS2CPacket(player.getId(), player.getDataTracker().getChangedEntries()));
+            packetListener.save(new EntityTrackerUpdateS2CPacket(player.getId(), player.getDataTracker().getChangedEntries()));
             //#elseif MC>=11500
-            packetListener.save(new EntityTrackerUpdateS2CPacket(player.getEntityId(), player.getDataTracker(), true));
+            //$$ packetListener.save(new EntityTrackerUpdateS2CPacket(player.getId(), player.getDataTracker(), true));
             //#endif
             lastX = lastY = lastZ = null;
             //#if MC>=11100
@@ -188,15 +188,15 @@ public class RecordingEventHandler extends EventRegistrations {
                 //$$ );
                 //#endif
             } else {
-                byte newYaw = (byte) ((int) (player.yaw * 256.0F / 360.0F));
-                byte newPitch = (byte) ((int) (player.pitch * 256.0F / 360.0F));
+                byte newYaw = (byte) ((int) (player.getYaw() * 256.0F / 360.0F));
+                byte newPitch = (byte) ((int) (player.getPitch() * 256.0F / 360.0F));
 
                 //#if MC>=11400
                 packet = new EntityS2CPacket.RotateAndMoveRelative(
                 //#else
                 //$$ packet = new SPacketEntity.S17PacketEntityLookMove(
                 //#endif
-                        player.getEntityId(),
+                        player.getId(),
                         //#if MC>=10904
                         (short) Math.round(dx * 4096), (short) Math.round(dy * 4096), (short) Math.round(dz * 4096),
                         //#else
@@ -223,7 +223,7 @@ public class RecordingEventHandler extends EventRegistrations {
                 rotationYawHeadBefore = rotationYawHead;
             }
 
-            packetListener.save(new EntityVelocityUpdateS2CPacket(player.getEntityId(),
+            packetListener.save(new EntityVelocityUpdateS2CPacket(player.getId(),
                     //#if MC>=11400
                     player.getVelocity()
                     //#else
@@ -280,7 +280,7 @@ public class RecordingEventHandler extends EventRegistrations {
                     stack = stack != null ? stack.copy() : null;
                     playerItems.set(index, stack);
                     //#if MC>=11600
-                    packetListener.save(new EntityEquipmentUpdateS2CPacket(player.getEntityId(), Collections.singletonList(Pair.of(slot, stack))));
+                    packetListener.save(new EntityEquipmentUpdateS2CPacket(player.getId(), Collections.singletonList(Pair.of(slot, stack))));
                     //#else
                     //$$ packetListener.save(new EntityEquipmentUpdateS2CPacket(player.getEntityId(), slot, stack));
                     //#endif
@@ -290,7 +290,7 @@ public class RecordingEventHandler extends EventRegistrations {
             //Leaving Ride
 
             Entity vehicle = player.getVehicle();
-            int vehicleId = vehicle == null ? -1 : vehicle.getEntityId();
+            int vehicleId = vehicle == null ? -1 : vehicle.getId();
             if (lastRiding != vehicleId) {
                 lastRiding = vehicleId;
                 packetListener.save(new EntityAttachS2CPacket(
@@ -319,7 +319,7 @@ public class RecordingEventHandler extends EventRegistrations {
     //$$ public void onBlockBreakAnim(int breakerId, int x, int y, int z, int progress) {
     //#endif
         PlayerEntity thePlayer = mc.player;
-        if (thePlayer != null && breakerId == thePlayer.getEntityId()) {
+        if (thePlayer != null && breakerId == thePlayer.getId()) {
             packetListener.save(new BlockBreakingProgressS2CPacket(breakerId,
                     //#if MC>=10800
                     pos,

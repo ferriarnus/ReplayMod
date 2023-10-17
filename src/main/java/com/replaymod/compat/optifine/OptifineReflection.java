@@ -1,6 +1,6 @@
 package com.replaymod.compat.optifine;
 
-import net.minecraft.client.options.GameOptions;
+import net.minecraft.client.option.GameOptions;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;

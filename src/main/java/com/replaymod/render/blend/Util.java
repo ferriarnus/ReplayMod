@@ -6,7 +6,7 @@ import de.johni0702.minecraft.gui.utils.lwjgl.vector.Quaternion;
 import de.johni0702.minecraft.gui.utils.lwjgl.vector.Vector3f;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.util.GlAllocationUtils;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.block.entity.BlockEntity;
 import org.blender.dna.Link;
 import org.blender.dna.ListBase;
@@ -184,11 +184,11 @@ public class Util {
 
     public static String getTileEntityId(BlockEntity tileEntity) {
         //#if MC>=11800
-        //$$ NbtCompound nbt = tileEntity.createNbt();
+        NbtCompound nbt = tileEntity.createNbt();
         //#else
-        CompoundTag nbt = new CompoundTag();
+        //$$ NbtCompound nbt = new NbtCompound();
         //#if MC>=11400
-        tileEntity.toTag(nbt);
+        //$$ tileEntity.writeNbt(nbt);
         //#else
         //$$ tileEntity.writeToNBT(nbt);
         //#endif

@@ -10,7 +10,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.RenderTickCounter;
 
 //#if MC>=11802
-//$$ import net.minecraft.client.gui.screen.DownloadingTerrainScreen;
+import net.minecraft.client.gui.screen.DownloadingTerrainScreen;
 //#endif
 
 //#if MC>=11400
@@ -118,11 +118,11 @@ public class InputReplayTimer extends WrappedTimer {
             //#endif
 
             //#if MC>=11802
-            //$$ // As of 1.18.2, this screen always stays open for at least two seconds, and requires ticking to close.
-            //$$ // Thanks, but we'll have none of that (at least while in a replay).
-            //$$ if (mc.currentScreen instanceof DownloadingTerrainScreen) {
-            //$$     mc.currentScreen.close();
-            //$$ }
+            // As of 1.18.2, this screen always stays open for at least two seconds, and requires ticking to close.
+            // Thanks, but we'll have none of that (at least while in a replay).
+            if (mc.currentScreen instanceof DownloadingTerrainScreen) {
+                mc.currentScreen.close();
+            }
             //#endif
 
         }

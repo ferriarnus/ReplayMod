@@ -14,19 +14,19 @@ import net.minecraft.client.gui.screen.GameMenuScreen;
 import net.minecraft.client.gui.screen.TitleScreen;
 import net.minecraft.client.gui.screen.multiplayer.MultiplayerScreen;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.AbstractButtonWidget;
+import net.minecraft.client.gui.widget.ClickableWidget;
 
 //#if MC>=12000
-//$$ import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.DrawContext;
 //#endif
 
 //#if MC>=11904
 //#else
-import net.minecraft.client.MinecraftClient;
+//$$ import net.minecraft.client.MinecraftClient;
 //#endif
 
 //#if MC>=11903
-//$$ import net.minecraft.client.gui.tooltip.Tooltip;
+import net.minecraft.client.gui.tooltip.Tooltip;
 //#endif
 
 //#if MC>=11604
@@ -39,7 +39,7 @@ import net.minecraft.client.util.math.MatrixStack;
 
 //#if MC>=11600
 import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableText;
+import net.minecraft.text.TranslatableTextContent;
 //#else
 //$$ import net.minecraft.client.resource.language.I18n;
 //#endif
@@ -76,7 +76,7 @@ public class GuiHandler extends EventRegistrations {
     }
 
     { on(InitScreenCallback.EVENT, this::injectIntoIngameMenu); }
-    private void injectIntoIngameMenu(Screen guiScreen, Collection<AbstractButtonWidget> buttonList) {
+    private void injectIntoIngameMenu(Screen guiScreen, Collection<ClickableWidget> buttonList) {
         if (!(guiScreen instanceof GameMenuScreen)) {
             return;
         }
@@ -86,11 +86,11 @@ public class GuiHandler extends EventRegistrations {
             mod.getReplayHandler().getReplaySender().setReplaySpeed(0);
 
             //#if MC>=11600
-            final Text BUTTON_OPTIONS = new TranslatableText("menu.options");
-            final Text BUTTON_EXIT_SERVER = new TranslatableText("menu.disconnect");
-            final Text BUTTON_ADVANCEMENTS = new TranslatableText("gui.advancements");
-            final Text BUTTON_STATS = new TranslatableText("gui.stats");
-            final Text BUTTON_OPEN_TO_LAN = new TranslatableText("menu.shareToLan");
+            final Text BUTTON_OPTIONS = net.minecraft.text.Text.translatable("menu.options");
+            final Text BUTTON_EXIT_SERVER = net.minecraft.text.Text.translatable("menu.disconnect");
+            final Text BUTTON_ADVANCEMENTS = net.minecraft.text.Text.translatable("gui.advancements");
+            final Text BUTTON_STATS = net.minecraft.text.Text.translatable("gui.stats");
+            final Text BUTTON_OPEN_TO_LAN = net.minecraft.text.Text.translatable("menu.shareToLan");
             //#else
             //#if MC>=11400
             //$$ final String BUTTON_OPTIONS = I18n.translate("menu.options");
@@ -114,8 +114,8 @@ public class GuiHandler extends EventRegistrations {
             //$$ GuiButton openToLan = null;
             //#endif
             //#if MC>=11400
-            AbstractButtonWidget achievements = null, stats = null;
-            for(AbstractButtonWidget b : new ArrayList<>(buttonList)) {
+            ClickableWidget achievements = null, stats = null;
+            for(ClickableWidget b : new ArrayList<>(buttonList)) {
             //#else
             //$$ GuiButton achievements = null, stats = null;
             //$$ for(GuiButton b : new ArrayList<>(buttonList)) {
@@ -141,8 +141,8 @@ public class GuiHandler extends EventRegistrations {
                     addButton(guiScreen, new InjectedButton(
                             guiScreen,
                             BUTTON_EXIT_REPLAY,
-                            b.x,
-                            b.y,
+                            b.getX(),
+                            b.getY(),
                             b.getWidth(),
                             b.getHeight(),
                             "replaymod.gui.exit",
@@ -162,9 +162,9 @@ public class GuiHandler extends EventRegistrations {
                     //$$ openToLan = b;
                     //#endif
                 //#if MC>=11400 && MC<11901
-                } else if (id.equals(BUTTON_OPTIONS)) {
+                //$$ } else if (id.equals(BUTTON_OPTIONS)) {
                     //#if MC>=11400
-                    b.setWidth(204);
+                    //$$ b.setWidth(204);
                     //#else
                     //$$ b.width = 200
                     //#endif
@@ -172,14 +172,14 @@ public class GuiHandler extends EventRegistrations {
                 }
                 if (remove) {
                     // Moving the button far off-screen is easier to do cross-version than actually removing it
-                    b.x = -1000;
-                    b.y = -1000;
+                    b.setX(-1000);
+                    b.setY(-1000);
                 }
             }
             if (achievements != null && stats != null) {
                 moveAllButtonsInRect(buttonList,
-                        achievements.x, stats.x + stats.getWidth(),
-                        achievements.y, Integer.MAX_VALUE,
+                        achievements.getX(), stats.getX() + stats.getWidth(),
+                        achievements.getY(), Integer.MAX_VALUE,
                         -24);
             }
             // In 1.13+ Forge, the Options button shares one row with the Open to LAN button
@@ -205,7 +205,7 @@ public class GuiHandler extends EventRegistrations {
      */
     private void moveAllButtonsInRect(
             //#if MC>=11400
-            Collection<AbstractButtonWidget> buttons,
+            Collection<ClickableWidget> buttons,
             //#else
             //$$ Collection<GuiButton> buttons,
             //#endif
@@ -216,10 +216,10 @@ public class GuiHandler extends EventRegistrations {
             int moveBy
     ) {
         buttons.stream()
-                .filter(button -> button.x <= xEnd && button.x + button.getWidth() >= xStart)
-                .filter(button -> button.y <= yEnd && button.y + button.getHeight() >= yStart)
+                .filter(button -> button.getX() <= xEnd && button.getX() + button.getWidth() >= xStart)
+                .filter(button -> button.getY() <= yEnd && button.getY() + button.getHeight() >= yStart)
                 // FIXME remap bug: needs the {} to recognize the setter (it also doesn't understand +=)
-                .forEach(button -> { button.y = button.y + moveBy; });
+                .forEach(button -> { button.setY(button.getY() + moveBy); });
     }
 
     { on(InitScreenCallback.EVENT, (screen, buttons) -> ensureReplayStopped(screen)); }
@@ -244,7 +244,7 @@ public class GuiHandler extends EventRegistrations {
     }
 
     { on(InitScreenCallback.EVENT, this::injectIntoMainMenu); }
-    private void injectIntoMainMenu(Screen guiScreen, Collection<AbstractButtonWidget> buttonList) {
+    private void injectIntoMainMenu(Screen guiScreen, Collection<ClickableWidget> buttonList) {
         if (!(guiScreen instanceof TitleScreen)) {
             return;
         }
@@ -262,12 +262,12 @@ public class GuiHandler extends EventRegistrations {
 
     //#if MC>=11604
     private void properInjectIntoMainMenu(Screen screen) {
-        List<AbstractButtonWidget> buttonList = Screens.getButtons(screen);
+        List<ClickableWidget> buttonList = Screens.getButtons(screen);
         MainMenuButtonPosition buttonPosition = MainMenuButtonPosition.valueOf(mod.getCore().getSettingsRegistry().get(Setting.MAIN_MENU_BUTTON));
 
         // Workaround for FancyMenu v2 initializing the screen twice, likely fixed in v3
         if (isFancyMenu2Installed()) {
-            for (AbstractButtonWidget button : buttonList) {
+            for (ClickableWidget button : buttonList) {
                 if (button instanceof InjectedButton) {
                     return;
                 }
@@ -278,14 +278,14 @@ public class GuiHandler extends EventRegistrations {
         if (buttonPosition == MainMenuButtonPosition.BIG) {
             int x = screen.width / 2 - 100;
             // We want to position our button below the realms button
-            Optional<AbstractButtonWidget> targetButton = findButton(buttonList, "menu.online", 14)
+            Optional<ClickableWidget> targetButton = findButton(buttonList, "menu.online", 14)
                     .map(Optional::of)
                     // or, if someone removed the realms button, we'll alternatively take the multiplayer one
                     .orElseGet(() -> findButton(buttonList, "menu.multiplayer", 2));
 
             int y = targetButton
                     // if we found some button, put our button at its position (we'll move it out of the way shortly)
-                    .map(it -> it.y)
+                    .map(it -> it.getY())
                     // and if we can't even find that one, then just guess
                     .orElse(screen.height / 4 + 10 + 4 * 24);
 
@@ -300,7 +300,7 @@ public class GuiHandler extends EventRegistrations {
             pos = determineButtonPos(buttonPosition, screen, buttonList);
         }
 
-        AbstractButtonWidget replayViewerButton;
+        ClickableWidget replayViewerButton;
         if (buttonPosition == MainMenuButtonPosition.BIG) {
             replayViewerButton = new InjectedButton(
                     screen, BUTTON_REPLAY_VIEWER,
@@ -321,20 +321,20 @@ public class GuiHandler extends EventRegistrations {
             ) {
                 @Override
                 //#if MC>=12000
-                //$$ public void renderButton(DrawContext context, int mouseX, int mouseY, float delta) {
-                //$$     super.renderButton(context, mouseX, mouseY, delta);
+                public void renderButton(DrawContext context, int mouseX, int mouseY, float delta) {
+                    super.renderButton(context, mouseX, mouseY, delta);
                 //#elseif MC>=11904
                 //$$ public void renderButton(MatrixStack context, int mouseX, int mouseY, float delta) {
                 //$$     super.renderButton(context, mouseX, mouseY, delta);
                 //#else
-                protected void renderBg(MatrixStack context, MinecraftClient client, int mouseX, int mouseY) {
-                    super.renderBg(context, client, mouseX, mouseY);
+                //$$ protected void renderBackground(MatrixStack context, MinecraftClient client, int mouseX, int mouseY) {
+                //$$     super.renderBackground(context, client, mouseX, mouseY);
                 //#endif
 
                     MinecraftGuiRenderer renderer = new MinecraftGuiRenderer(context);
                     renderer.bindTexture(GuiReplayButton.ICON);
                     renderer.drawTexturedRect(
-                            this.x + 3, this.y + 3,
+                            this.getX() + 3, this.getY() + 3,
                             0, 0,
                             this.width - 6, this.height - 6,
                             1, 1,
@@ -361,7 +361,7 @@ public class GuiHandler extends EventRegistrations {
     }
     //#endif
 
-    private void legacyInjectIntoMainMenu(Screen guiScreen, Collection<AbstractButtonWidget> buttonList) {
+    private void legacyInjectIntoMainMenu(Screen guiScreen, Collection<ClickableWidget> buttonList) {
         boolean isCustomMainMenuMod = guiScreen.getClass().getName().endsWith("custommainmenu.gui.GuiFakeMain");
 
         MainMenuButtonPosition buttonPosition = MainMenuButtonPosition.valueOf(mod.getCore().getSettingsRegistry().get(Setting.MAIN_MENU_BUTTON));
@@ -397,7 +397,7 @@ public class GuiHandler extends EventRegistrations {
                 // or, if someone removed the realms button, we'll alternatively take the multiplayer one
                 .orElse(findButton(buttonList, "menu.multiplayer", 2))
                 // if we found some button, put our button at its position (we'll move it out of the way shortly)
-                .map(it -> it.y)
+                .map(it -> it.getY())
                 // and if we can't even find that one, then just guess
                 .orElse(guiScreen.height / 4 + 10 + 4 * 24);
 
@@ -429,7 +429,7 @@ public class GuiHandler extends EventRegistrations {
         addButton(guiScreen, button);
     }
 
-    private Point determineButtonPos(MainMenuButtonPosition buttonPosition, Screen guiScreen, Collection<AbstractButtonWidget> buttonList) {
+    private Point determineButtonPos(MainMenuButtonPosition buttonPosition, Screen guiScreen, Collection<ClickableWidget> buttonList) {
         Point topRight = new Point(guiScreen.width - 20 - 5, 5);
 
         if (buttonPosition == MainMenuButtonPosition.TOP_LEFT) {
@@ -447,15 +447,15 @@ public class GuiHandler extends EventRegistrations {
                     .flatMap(it -> it.map(Stream::of).orElseGet(Stream::empty))
                     // skip buttons which already have something next to them
                     .filter(it -> buttonList.stream().noneMatch(button ->
-                            button.x <= it.x + it.getWidth() + 4 + 20
-                                    && button.y <= it.y + it.getHeight()
-                                    && button.x + button.getWidth() >= it.x + it.getWidth() + 4
-                                    && button.y + button.getHeight() >= it.y
+                            button.getX() <= it.getX() + it.getWidth() + 4 + 20
+                                    && button.getY() <= it.getY() + it.getHeight()
+                                    && button.getX() + button.getWidth() >= it.getX() + it.getWidth() + 4
+                                    && button.getY() + button.getHeight() >= it.getY()
                     ))
                     // then take the bottom-most and if there's two, the right-most
-                    .max(Comparator.<AbstractButtonWidget>comparingInt(it -> it.y).thenComparingInt(it -> it.x))
+                    .max(Comparator.<ClickableWidget>comparingInt(it -> it.getY()).thenComparingInt(it -> it.getX()))
                     // and place ourselves next to it
-                    .map(it -> new Point(it.x + it.getWidth() + 4, it.y))
+                    .map(it -> new Point(it.getX() + it.getWidth() + 4, it.getY()))
                     // if all fails, just go with TOP_RIGHT
                     .orElse(topRight);
         } else {
@@ -481,30 +481,30 @@ public class GuiHandler extends EventRegistrations {
                     case LEFT_OF_MULTIPLAYER:
                     case LEFT_OF_REALMS:
                     case LEFT_OF_MODS:
-                        return new Point(button.x - 4 - 20, button.y);
+                        return new Point(button.getX() - 4 - 20, button.getY());
                     case RIGHT_OF_MODS:
                     case RIGHT_OF_SINGLEPLAYER:
                     case RIGHT_OF_MULTIPLAYER:
                     case RIGHT_OF_REALMS:
-                        return new Point(button.x + button.getWidth() + 4, button.y);
+                        return new Point(button.getX() + button.getWidth() + 4, button.getY());
                 }
                 throw new RuntimeException();
             }).orElse(topRight);
         }
     }
 
-    private int determineButtonIndex(Collection<AbstractButtonWidget> buttons, AbstractButtonWidget button) {
-        AbstractButtonWidget best = null;
+    private int determineButtonIndex(Collection<ClickableWidget> buttons, ClickableWidget button) {
+        ClickableWidget best = null;
         int bestIndex = -1;
 
         int index = 0;
-        for (AbstractButtonWidget other : buttons) {
-            if (other.y > button.y || other.y == button.y && other.x > button.x) {
+        for (ClickableWidget other : buttons) {
+            if (other.getY() > button.getY() || other.getY() == button.getY() && other.getX() > button.getX()) {
                 index++;
                 continue;
             }
 
-            if (best == null || other.y > best.y || other.y == best.y && other.x > best.x) {
+            if (best == null || other.getY() > best.getY() || other.getY() == best.getY() && other.getX() > best.getX()) {
                 best = other;
                 bestIndex = index + 1;
             }
@@ -570,7 +570,7 @@ public class GuiHandler extends EventRegistrations {
                     width,
                     height,
                     //#if MC>=11600
-                    new TranslatableText(buttonText)
+                    net.minecraft.text.Text.translatable(buttonText)
                     //#else
                     //$$ I18n.translate(buttonText)
                     //#endif
@@ -578,12 +578,12 @@ public class GuiHandler extends EventRegistrations {
                     , self -> onClick.accept((InjectedButton) self)
                     //#endif
                     //#if MC>=11600 && MC<11903
-                    , tooltip != null
-                            ? (button, matrices, mouseX, mouseY) -> guiScreen.renderTooltip(matrices, new TranslatableText(tooltip), mouseX, mouseY)
-                            : EMPTY
+                    //$$ , tooltip != null
+                    //$$         ? (button, matrices, mouseX, mouseY) -> guiScreen.renderTooltip(matrices, net.minecraft.text.Text.translatable(tooltip), mouseX, mouseY)
+                    //$$         : EMPTY
                     //#endif
                     //#if MC>=11903
-                    //$$ , DEFAULT_NARRATION_SUPPLIER
+                    , DEFAULT_NARRATION_SUPPLIER
                     //#endif
             );
             this.guiScreen = guiScreen;
@@ -595,9 +595,9 @@ public class GuiHandler extends EventRegistrations {
             //#endif
 
             //#if MC>=11903
-            //$$ if (tooltip != null) {
-            //$$     setTooltip(Tooltip.of(Text.translatable(tooltip)));
-            //$$ }
+            if (tooltip != null) {
+                setTooltip(Tooltip.of(Text.translatable(tooltip)));
+            }
             //#endif
         }
 

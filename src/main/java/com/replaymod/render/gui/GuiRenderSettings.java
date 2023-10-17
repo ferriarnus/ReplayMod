@@ -49,7 +49,7 @@ import static com.replaymod.core.utils.Utils.error;
 import static com.replaymod.render.ReplayModRender.LOGGER;
 
 //#if MC>=11400
-import net.minecraft.text.TranslatableText;
+import net.minecraft.text.TranslatableTextContent;
 //#endif
 
 public class GuiRenderSettings extends AbstractGuiPopup<GuiRenderSettings> {
@@ -242,7 +242,7 @@ public class GuiRenderSettings extends AbstractGuiPopup<GuiRenderSettings> {
                 videoRenderer.renderVideo();
             } catch (FFmpegWriter.NoFFmpegException e) {
                 LOGGER.error("Rendering video:", e);
-                getMinecraft().openScreen(new GuiNoFfmpeg(getScreen()::display).toMinecraft());
+                getMinecraft().setScreen(new GuiNoFfmpeg(getScreen()::display).toMinecraft());
             } catch (FFmpegWriter.FFmpegStartupException e) {
                 GuiExportFailed.tryToRecover(e, newSettings -> {
                     // Update settings with fixed ffmpeg arguments

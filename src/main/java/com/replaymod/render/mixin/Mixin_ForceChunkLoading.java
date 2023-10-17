@@ -1,19 +1,32 @@
 package com.replaymod.render.mixin;
 
-import com.replaymod.compat.shaders.ShaderReflection;
 import com.replaymod.render.hooks.ForceChunkLoadingHook;
 import com.replaymod.render.hooks.IForceChunkLoading;
+import com.replaymod.render.utils.FlawlessFrames;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.Frustum;
+import net.minecraft.client.render.GameRenderer;
+import net.minecraft.client.render.LightmapTextureManager;
 import net.minecraft.client.render.WorldRenderer;
 import net.minecraft.client.render.chunk.ChunkBuilder;
+import net.minecraft.client.render.chunk.ChunkRendererRegionBuilder;
+import net.minecraft.client.util.math.MatrixStack;
+import org.joml.Matrix4f;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.Set;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Mixin(WorldRenderer.class)
 public abstract class Mixin_ForceChunkLoading implements IForceChunkLoading {
@@ -24,54 +37,83 @@ public abstract class Mixin_ForceChunkLoading implements IForceChunkLoading {
         this.replayModRender_hook = hook;
     }
 
-    @Shadow private Set<ChunkBuilder.BuiltChunk> chunksToRebuild;
-
     @Shadow private ChunkBuilder chunkBuilder;
 
-    @Shadow private boolean needsTerrainUpdate;
+    @Shadow protected abstract void setupTerrain(Camera par1, Frustum par2, boolean par3, boolean par4);
 
-    @Shadow protected abstract void setupTerrain(Camera camera_1, Frustum frustum_1, boolean boolean_1, int int_1, boolean boolean_2);
+    @Shadow private Frustum frustum;
 
-    @Shadow private int frame;
+    @Shadow private Frustum capturedFrustum;
 
-    private boolean passThrough;
-    @Inject(method = "setupTerrain", at = @At("HEAD"), cancellable = true)
-    private void forceAllChunks(Camera camera_1, Frustum frustum_1, boolean boolean_1, int int_1, boolean boolean_2, CallbackInfo ci) throws IllegalAccessException {
+    @Shadow @Final private MinecraftClient client;
+
+    @Shadow @Final private ObjectArrayList<ChunkInfoAccessor> chunkInfos;
+
+    @Shadow private boolean shouldUpdate;
+
+    @Shadow @Final private BlockingQueue<ChunkBuilder.BuiltChunk> builtChunks;
+
+    @Shadow private Future<?> fullUpdateFuture;
+
+    @Shadow @Final private AtomicBoolean updateFinished;
+
+    @Shadow protected abstract void applyFrustum(Frustum par1);
+
+    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/WorldRenderer;setupTerrain(Lnet/minecraft/client/render/Camera;Lnet/minecraft/client/render/Frustum;ZZ)V"))
+    private void forceAllChunks(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo ci) {
         if (replayModRender_hook == null) {
             return;
         }
-        if (passThrough) {
+        if (FlawlessFrames.hasSodium()) {
             return;
         }
-        if (ShaderReflection.shaders_isShadowPass != null && (boolean) ShaderReflection.shaders_isShadowPass.get(null)) {
-            return;
-        }
-        ci.cancel();
 
-        passThrough = true;
-        try {
-            do {
-                // Determine which chunks shall be visible
-                setupTerrain(camera_1, frustum_1, boolean_1, frame++, boolean_2);
+        assert this.client.player != null;
 
-                // Schedule all chunks which need rebuilding (we schedule even important rebuilds because we wait for
-                // all of them anyway and this way we can take advantage of threading)
-                for (ChunkBuilder.BuiltChunk builtChunk : this.chunksToRebuild) {
-                    // MC sometimes schedules invalid chunks when you're outside of loaded chunks (e.g. y > 256)
-                    if (builtChunk.shouldBuild()) {
-                        builtChunk.scheduleRebuild(this.chunkBuilder);
-                    }
-                    builtChunk.cancelRebuild();
+        ChunkRendererRegionBuilder chunkRendererRegionBuilder = new ChunkRendererRegionBuilder();
+
+        do {
+            // Determine which chunks shall be visible
+            setupTerrain(camera, this.frustum, this.capturedFrustum != null, this.client.player.isSpectator());
+
+            // Wait for async processing to be complete
+            if (this.fullUpdateFuture != null) {
+                try {
+                    this.fullUpdateFuture.get(5, TimeUnit.SECONDS);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    return;
+                } catch (ExecutionException e) {
+                    throw new RuntimeException(e);
+                } catch (TimeoutException e) {
+                    e.printStackTrace();
                 }
-                this.chunksToRebuild.clear();
+            }
 
-                // Upload all chunks
-                this.needsTerrainUpdate |= ((ForceChunkLoadingHook.IBlockOnChunkRebuilds) this.chunkBuilder).uploadEverythingBlocking();
+            // If that async processing did change the chunk graph, we need to re-apply the frustum (otherwise this is
+            // only done in the next setupTerrain call, which not happen this frame)
+            if (this.updateFinished.compareAndSet(true, false)) {
+                this.applyFrustum((new Frustum(frustum)).method_38557(8)); // call based on the one in setupTerrain
+            }
 
-                // Repeat until no more updates are needed
-            } while (this.needsTerrainUpdate);
-        } finally {
-            passThrough = false;
-        }
+            // Schedule all chunks which need rebuilding (we schedule even important rebuilds because we wait for
+            // all of them anyway and this way we can take advantage of threading)
+            for (ChunkInfoAccessor chunkInfo : this.chunkInfos) {
+                ChunkBuilder.BuiltChunk builtChunk = chunkInfo.getChunk();
+                if (!builtChunk.needsRebuild()) {
+                    continue;
+                }
+                // MC sometimes schedules invalid chunks when you're outside of loaded chunks (e.g. y > 256)
+                if (builtChunk.shouldBuild()) {
+                    builtChunk.scheduleRebuild(this.chunkBuilder, chunkRendererRegionBuilder);
+                }
+                builtChunk.cancelRebuild();
+            }
+
+            // Upload all chunks
+            this.shouldUpdate |= ((ForceChunkLoadingHook.IBlockOnChunkRebuilds) this.chunkBuilder).uploadEverythingBlocking();
+
+            // Repeat until no more updates are needed
+        } while (this.shouldUpdate || !this.builtChunks.isEmpty());
     }
 }

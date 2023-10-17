@@ -8,7 +8,7 @@ import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.client.util.Window;
 
 //#if MC>=11700
-//$$ import net.minecraft.client.gl.WindowFramebuffer;
+import net.minecraft.client.gl.WindowFramebuffer;
 //#endif
 
 public class VirtualWindow implements Closeable {
@@ -32,13 +32,13 @@ public class VirtualWindow implements Closeable {
         framebufferHeight = acc.getFramebufferHeight();
 
         //#if MC>=11700
-        //$$ guiFramebuffer = new WindowFramebuffer(framebufferWidth, framebufferHeight);
+        guiFramebuffer = new WindowFramebuffer(framebufferWidth, framebufferHeight);
         //#else
-        guiFramebuffer = new Framebuffer(framebufferWidth, framebufferHeight, true
+        //$$ guiFramebuffer = new Framebuffer(framebufferWidth, framebufferHeight, true
                 //#if MC>=11400
-                , false
+                //$$ , false
                 //#endif
-        );
+        //$$ );
         //#endif
 
         MinecraftClientExt.get(mc).setWindowDelegate(this);
@@ -128,7 +128,7 @@ public class VirtualWindow implements Closeable {
 
     private void applyScaleFactor() {
         //#if MC>=11400
-        window.setScaleFactor(window.calculateScaleFactor(mc.options.guiScale, mc.forcesUnicodeFont()));
+        window.setScaleFactor(window.calculateScaleFactor(mc.options.getGuiScale().getValue(), mc.forcesUnicodeFont()));
         //#else
         //$$ // Nothing to do, ScaledResolution re-computes the scale factor every time it is created
         //#endif

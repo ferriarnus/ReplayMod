@@ -61,8 +61,8 @@ public abstract class Mixin_StabilizeCamera {
             //#if MC<11400
             //$$ Entity entity = getMinecraft().getRenderViewEntity();
             //#endif
-            orgYaw = entity.yaw;
-            orgPitch = entity.pitch;
+            orgYaw = entity.getYaw();
+            orgPitch = entity.getPitch();
             orgPrevYaw = entity.prevYaw;
             orgPrevPitch = entity.prevPitch;
             orgRoll = entity instanceof CameraEntity ? ((CameraEntity) entity).roll : 0;
@@ -84,14 +84,14 @@ public abstract class Mixin_StabilizeCamera {
             RenderSettings settings = getHandler().getSettings();
             if (settings.isStabilizeYaw()) {
                 entity.prevYaw = 0;
-                entity.yaw = 0;
+                entity.setYaw(0);
                 if (entity instanceof LivingEntity) {
                     ((LivingEntity) entity).prevHeadYaw = ((LivingEntity) entity).headYaw = 0;
                 }
             }
             if (settings.isStabilizePitch()) {
                 entity.prevPitch = 0;
-                entity.pitch = 0;
+                entity.setPitch(0);
             }
             if (settings.isStabilizeRoll() && entity instanceof CameraEntity) {
                 ((CameraEntity) entity).roll = 0;
@@ -121,8 +121,8 @@ public abstract class Mixin_StabilizeCamera {
             //#if MC<11400
             //$$ Entity entity = getMinecraft().getRenderViewEntity();
             //#endif
-            entity.yaw = orgYaw;
-            entity.pitch = orgPitch;
+            entity.setYaw(orgYaw);
+            entity.setPitch(orgPitch);
             entity.prevYaw = orgPrevYaw;
             entity.prevPitch = orgPrevPitch;
             if (entity instanceof CameraEntity) {

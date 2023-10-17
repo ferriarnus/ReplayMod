@@ -4,7 +4,7 @@ import com.replaymod.replay.camera.CameraEntity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.client.util.math.Vector3f;
+import org.joml.Vector3f;
 import net.minecraft.entity.Entity;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -26,7 +26,7 @@ public class MixinCamera {
     private void applyRoll(float float_1, long long_1, MatrixStack matrixStack, CallbackInfo ci) {
         Entity entity = this.client.getCameraEntity() == null ? this.client.player : this.client.getCameraEntity();
         if (entity instanceof CameraEntity) {
-            matrixStack.multiply(Vector3f.POSITIVE_Z.getDegreesQuaternion(((CameraEntity) entity).roll));
+            matrixStack.multiply(new org.joml.Quaternionf().fromAxisAngleDeg(new org.joml.Vector3f(0, 0, 1), ((CameraEntity) entity).roll));
         }
     }
 }

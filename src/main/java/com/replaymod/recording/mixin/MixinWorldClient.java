@@ -17,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 //#if MC>=11802
-//$$ import net.minecraft.util.registry.RegistryEntry;
+import net.minecraft.registry.entry.RegistryEntry;
 //#endif
 
 
@@ -29,11 +29,11 @@ public abstract class MixinWorldClient extends World implements RecordingEventHa
     @SuppressWarnings("ConstantConditions")
     protected MixinWorldClient() {
         //#if MC>=11904
-        //$$ super(null, null, null, null, null, false, false, 0, 0);
+        super(null, null, null, null, null, false, false, 0, 0);
         //#elseif MC>=11900
         //$$ super(null, null, null, null, false, false, 0, 0);
         //#elseif MC>=11602
-        super(null, null, null, null, false, false, 0);
+        //$$ super(null, null, null, null, false, false, 0);
         //#elseif MC>=11600
         //$$ super(null, null, null, null, null, false, false, 0);
         //#else
@@ -50,15 +50,15 @@ public abstract class MixinWorldClient extends World implements RecordingEventHa
     // other clients so we have to record them manually.
     // E.g. Block place sounds
     //#if MC>=11903
-    //$$ @Inject(method = "playSound(Lnet/minecraft/entity/player/PlayerEntity;DDDLnet/minecraft/registry/entry/RegistryEntry;Lnet/minecraft/sound/SoundCategory;FFJ)V",
-    //$$         at = @At("HEAD"))
+    @Inject(method = "playSound(Lnet/minecraft/entity/player/PlayerEntity;DDDLnet/minecraft/registry/entry/RegistryEntry;Lnet/minecraft/sound/SoundCategory;FFJ)V",
+            at = @At("HEAD"))
     //#elseif MC>=11900
     //$$ @Inject(method = "playSound(Lnet/minecraft/entity/player/PlayerEntity;DDDLnet/minecraft/sound/SoundEvent;Lnet/minecraft/sound/SoundCategory;FFJ)V",
     //$$         at = @At("HEAD"))
     //#elseif MC>=11400
     //#if FABRIC>=1
-    @Inject(method = "playSound(Lnet/minecraft/entity/player/PlayerEntity;DDDLnet/minecraft/sound/SoundEvent;Lnet/minecraft/sound/SoundCategory;FF)V",
-            at = @At("HEAD"))
+    //$$ @Inject(method = "playSound(Lnet/minecraft/entity/player/PlayerEntity;DDDLnet/minecraft/sound/SoundEvent;Lnet/minecraft/sound/SoundCategory;FF)V",
+    //$$         at = @At("HEAD"))
     //#else
     //$$ @Inject(method = "playSound(Lnet/minecraft/entity/player/PlayerEntity;DDDLnet/minecraft/util/SoundEvent;Lnet/minecraft/util/SoundCategory;FF)V",
     //$$         at = @At("HEAD"))
@@ -70,14 +70,14 @@ public abstract class MixinWorldClient extends World implements RecordingEventHa
     public void replayModRecording_recordClientSound(
             PlayerEntity player, double x, double y, double z,
             //#if MC>=11903
-            //$$ RegistryEntry<SoundEvent> sound,
+            RegistryEntry<SoundEvent> sound,
             //#else
-            SoundEvent sound,
+            //$$ SoundEvent sound,
             //#endif
             SoundCategory category,
             float volume, float pitch,
             //#if MC>=11900
-            //$$ long seed,
+            long seed,
             //#endif
             CallbackInfo ci) {
         if (player == this.client.player) {
@@ -87,7 +87,7 @@ public abstract class MixinWorldClient extends World implements RecordingEventHa
                 handler.onPacket(new PlaySoundS2CPacket(
                         sound, category, x, y, z, volume, pitch
                         //#if MC>=11900
-                        //$$ , seed
+                        , seed
                         //#endif
                 ));
             }

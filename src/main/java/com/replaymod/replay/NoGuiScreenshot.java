@@ -5,8 +5,8 @@ import com.google.common.util.concurrent.SettableFuture;
 import com.replaymod.core.ReplayMod;
 import de.johni0702.minecraft.gui.versions.Image;
 import net.minecraft.client.MinecraftClient;
-import com.mojang.blaze3d.platform.GlStateManager;
-import net.minecraft.client.util.ScreenshotUtils;
+import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraft.client.util.ScreenshotRecorder;
 
 import static com.replaymod.core.versions.MCVer.popMatrix;
 import static com.replaymod.core.versions.MCVer.pushMatrix;
@@ -62,7 +62,7 @@ public class NoGuiScreenshot {
 
                     // Render frame without GUI
                     pushMatrix();
-                    GlStateManager.clear(
+                    RenderSystem.clear(
                             16640
                             //#if MC>=11400
                             , true
@@ -70,7 +70,7 @@ public class NoGuiScreenshot {
                     );
                     mc.getFramebuffer().beginWrite(true);
                     //#if MC<11904
-                    GlStateManager.enableTexture();
+                    //$$ RenderSystem.enableTexture();
                     //#endif
 
                     float tickDelta = mc.getTickDelta();
@@ -105,9 +105,9 @@ public class NoGuiScreenshot {
                 // Read it, create the screenshot and finish the future
                 try {
                     //#if MC>=11400
-                    Image image = new Image(ScreenshotUtils.takeScreenshot(
+                    Image image = new Image(ScreenshotRecorder.takeScreenshot(
                             //#if MC<11701
-                            frameWidth, frameHeight,
+                            //$$ frameWidth, frameHeight,
                             //#endif
                             mc.getFramebuffer()
                     ));

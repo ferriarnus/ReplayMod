@@ -19,9 +19,9 @@ public abstract class MixinGuiSpectator {
     //#endif
     public void isInReplay(
             //#if MC>=11400 && MC<11802
-            double i,
+            //$$ double i,
             //#else
-            //$$ int i,
+            int i,
             //#endif
             CallbackInfo ci
     ) {
