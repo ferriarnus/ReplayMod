@@ -38,7 +38,7 @@ import java.util.concurrent.TimeoutException;
 
 //#if MC>=11900
 //#else
-import net.minecraft.client.options.Option;
+import net.minecraft.client.option.Option;
 //#endif
 
 public class ReplayMod implements Module, Scheduler {

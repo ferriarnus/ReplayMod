@@ -1,0 +1,14 @@
+pluginManagement {
+    repositories {
+        maven {
+            name = 'Fabric'
+            url = 'https://maven.fabricmc.net/'
+        }
+        maven { url "https://maven.architectury.dev/" }
+        maven { url "https://maven.minecraftforge.net" }
+        mavenCentral() // backup mirror for JCenter's Bintray, which is ordinarily used to resolve Eclipse's JGit
+        gradlePluginPortal()
+    }
+}
+
+rootProject.name = "replaymod-${getProperty("minecraft_version")}"
