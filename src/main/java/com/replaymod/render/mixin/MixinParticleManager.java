@@ -13,12 +13,12 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 
 //#if MC>=11900
 //#else
-import com.replaymod.render.blend.exporters.ParticlesExporter;
+//$$ import com.replaymod.render.blend.exporters.ParticlesExporter;
 //#endif
 
 //#if MC>=11500
 import net.minecraft.client.render.VertexConsumer;
-import net.minecraft.util.math.Quaternion;
+import org.joml.Quaternionf;
 //#else
 //$$ import com.replaymod.render.blend.mixin.ParticleAccessor;
 //$$ import net.minecraft.client.render.BufferBuilder;
@@ -39,8 +39,8 @@ public abstract class MixinParticleManager {
         if (handler == null || !handler.omnidirectional) {
             buildGeometry(particle, vertexConsumer, camera, partialTicks);
         } else {
-            Quaternion rotation = camera.getRotation();
-            Quaternion org = rotation.copy();
+            Quaternionf rotation = camera.getRotation();
+            Quaternionf org = new org.joml.Quaternionf(rotation);
             try {
                 Vec3d from = new Vec3d(0, 0, 1);
                 Vec3d to = MCVer.getPosition(particle, partialTicks).subtract(camera.getPos()).normalize();
@@ -50,17 +50,17 @@ public abstract class MixinParticleManager {
 
                 buildGeometry(particle, vertexConsumer, camera, partialTicks);
             } finally {
-                rotation.set(org.getW(), org.getX(), org.getY(), org.getZ());
+                rotation.set(org.w, org.x, org.y, org.z);
             }
         }
     }
 
     private void buildGeometry(Particle particle, VertexConsumer vertexConsumer, Camera camera, float partialTicks) {
         //#if MC<11900
-        BlendState blendState = BlendState.getState();
-        if (blendState != null) {
-            blendState.get(ParticlesExporter.class).onRender(particle, partialTicks);
-        }
+        //$$ BlendState blendState = BlendState.getState();
+        //$$ if (blendState != null) {
+        //$$     blendState.get(ParticlesExporter.class).onRender(particle, partialTicks);
+        //$$ }
         //#endif
         particle.buildGeometry(vertexConsumer, camera, partialTicks);
     }

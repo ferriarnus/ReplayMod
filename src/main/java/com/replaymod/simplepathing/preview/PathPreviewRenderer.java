@@ -1,6 +1,6 @@
 package com.replaymod.simplepathing.preview;
 
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.replaymod.core.ReplayMod;
 import com.replaymod.core.events.PostRenderWorldCallback;
 import com.replaymod.core.versions.MCVer;
@@ -31,7 +31,7 @@ import org.apache.commons.lang3.tuple.Triple;
 import org.lwjgl.opengl.GL11;
 
 //#if MC>=11700
-//$$ import net.minecraft.client.render.GameRenderer;
+import net.minecraft.client.render.GameRenderer;
 //#endif
 
 //#if MC>=11500
@@ -82,7 +82,7 @@ public class PathPreviewRenderer extends EventRegistrations {
 
         path.update();
 
-        int renderDistance = mc.options.viewDistance * 16;
+        int renderDistance = mc.options.getViewDistance().getValue() * 16;
         int renderDistanceSquared = renderDistance * renderDistance;
 
         Vector3f viewPos = new Vector3f(
@@ -98,20 +98,20 @@ public class PathPreviewRenderer extends EventRegistrations {
         );
 
         //#if MC<11700
-        GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
+        //$$ GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
         //#endif
         pushMatrix();
         try {
             //#if MC<11700
-            GL11.glDisable(GL11.GL_LIGHTING);
-            GL11.glDisable(GL11.GL_TEXTURE_2D);
+            //$$ GL11.glDisable(GL11.GL_LIGHTING);
+            //$$ GL11.glDisable(GL11.GL_TEXTURE_2D);
             //#endif
 
             //#if MC>=11700
-            //$$ RenderSystem.getModelViewStack().method_34425(matrixStack.peek().getModel());
-            //$$ RenderSystem.applyModelViewMatrix();
+            RenderSystem.getModelViewStack().multiplyPositionMatrix(matrixStack.peek().getPositionMatrix());
+            RenderSystem.applyModelViewMatrix();
             //#elseif MC>=11500
-            RenderSystem.multMatrix(matrixStack.peek().getModel());
+            //$$ RenderSystem.multMatrix(matrixStack.peek().getModel());
             //#endif
 
             for (PathSegment segment : path.getSegments()) {
@@ -166,7 +166,7 @@ public class PathPreviewRenderer extends EventRegistrations {
             GL11.glBlendFunc(GL11.GL_DST_COLOR, GL11.GL_SRC_COLOR);
             GL11.glDisable(GL11.GL_DEPTH_TEST);
             //#if MC<11700
-            GL11.glEnable(GL11.GL_TEXTURE_2D);
+            //$$ GL11.glEnable(GL11.GL_TEXTURE_2D);
             //#endif
 
             path.getKeyframes().stream()
@@ -204,9 +204,9 @@ public class PathPreviewRenderer extends EventRegistrations {
         } finally {
             popMatrix();
             //#if MC>=11700
-            //$$ GL11.glDisable(GL11.GL_BLEND);
+            GL11.glDisable(GL11.GL_BLEND);
             //#else
-            GL11.glPopAttrib();
+            //$$ GL11.glPopAttrib();
             //#endif
         }
     }
@@ -243,18 +243,18 @@ public class PathPreviewRenderer extends EventRegistrations {
 
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder buffer = tessellator.getBuffer();
-        buffer.begin(GL11.GL_LINES, VertexFormats.POSITION_COLOR);
+        buffer.begin(net.minecraft.client.render.VertexFormat.DrawMode.LINES, VertexFormats.LINES);
 
         emitLine(buffer, Vector3f.sub(pos1, view, null), Vector3f.sub(pos2, view, null), color);
 
         //#if MC>=11700
-        //$$ RenderSystem.setShader(GameRenderer::getRenderTypeLinesShader);
-        //$$ RenderSystem.disableCull();
+        RenderSystem.setShader(GameRenderer::getRenderTypeLinesProgram);
+        RenderSystem.disableCull();
         //#endif
-        GL11.glLineWidth(3);
+        com.mojang.blaze3d.systems.RenderSystem.lineWidth(3);
         tessellator.draw();
         //#if MC>=11700
-        //$$ RenderSystem.enableCull();
+        RenderSystem.enableCull();
         //#endif
     }
 
@@ -281,7 +281,7 @@ public class PathPreviewRenderer extends EventRegistrations {
 
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder buffer = tessellator.getBuffer();
-        buffer.begin(GL11.GL_QUADS, VertexFormats.POSITION_TEXTURE);
+        buffer.begin(net.minecraft.client.render.VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE);
 
         buffer.vertex(minX, minY, 0).texture(posX + size, posY + size).next();
         buffer.vertex(minX, maxY, 0).texture(posX + size, posY).next();
@@ -291,13 +291,13 @@ public class PathPreviewRenderer extends EventRegistrations {
         pushMatrix();
 
         Vector3f t = Vector3f.sub(pos, view, null);
-        GL11.glTranslatef(t.x, t.y, t.z);
-        GL11.glRotatef(-mc.getEntityRenderDispatcher().camera.getYaw(), 0, 1, 0);
-        GL11.glRotatef(mc.getEntityRenderDispatcher().camera.getPitch(), 1, 0, 0);
+        com.mojang.blaze3d.systems.RenderSystem.getModelViewStack().translate(t.x, t.y, t.z);
+        com.mojang.blaze3d.systems.RenderSystem.getModelViewStack().multiply(com.replaymod.core.versions.MCVer.quaternion(-mc.getEntityRenderDispatcher().camera.getYaw(), new org.joml.Vector3f(0, 1, 0)));
+        com.mojang.blaze3d.systems.RenderSystem.getModelViewStack().multiply(com.replaymod.core.versions.MCVer.quaternion(mc.getEntityRenderDispatcher().camera.getPitch(), new org.joml.Vector3f(1, 0, 0)));
 
         //#if MC>=11700
-        //$$ RenderSystem.applyModelViewMatrix();
-        //$$ RenderSystem.setShader(GameRenderer::getPositionTexShader);
+        RenderSystem.applyModelViewMatrix();
+        RenderSystem.setShader(GameRenderer::getPositionTexProgram);
         //#endif
         tessellator.draw();
 
@@ -311,29 +311,29 @@ public class PathPreviewRenderer extends EventRegistrations {
         pushMatrix();
 
         Vector3f t = Vector3f.sub(pos, view, null);
-        GL11.glTranslatef(t.x, t.y, t.z);
-        GL11.glRotatef(-rot.x, 0, 1, 0); // Yaw
-        GL11.glRotatef(rot.y, 1, 0, 0); // Pitch
-        GL11.glRotatef(rot.z, 0, 0, 1); // Roll
+        com.mojang.blaze3d.systems.RenderSystem.getModelViewStack().translate(t.x, t.y, t.z);
+        com.mojang.blaze3d.systems.RenderSystem.getModelViewStack().multiply(com.replaymod.core.versions.MCVer.quaternion(-rot.x, new org.joml.Vector3f(0, 1, 0)));
+        com.mojang.blaze3d.systems.RenderSystem.getModelViewStack().multiply(com.replaymod.core.versions.MCVer.quaternion(rot.y, new org.joml.Vector3f(1, 0, 0)));
+        com.mojang.blaze3d.systems.RenderSystem.getModelViewStack().multiply(com.replaymod.core.versions.MCVer.quaternion(rot.z, new org.joml.Vector3f(0, 0, 1)));
 
         //draw the position line
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder buffer = tessellator.getBuffer();
-        buffer.begin(GL11.GL_LINES, VertexFormats.POSITION_COLOR);
+        buffer.begin(net.minecraft.client.render.VertexFormat.DrawMode.LINES, VertexFormats.LINES);
 
         emitLine(buffer, new Vector3f(0, 0, 0), new Vector3f(0, 0, 2), 0x00ff00aa);
 
         //#if MC>=11700
-        //$$ RenderSystem.applyModelViewMatrix();
-        //$$ RenderSystem.setShader(GameRenderer::getRenderTypeLinesShader);
+        RenderSystem.applyModelViewMatrix();
+        RenderSystem.setShader(GameRenderer::getRenderTypeLinesProgram);
         //#else
-        GL11.glDisable(GL11.GL_TEXTURE_2D);
+        //$$ GL11.glDisable(GL11.GL_TEXTURE_2D);
         //#endif
 
         tessellator.draw();
 
         //#if MC<11700
-        GL11.glEnable(GL11.GL_TEXTURE_2D);
+        //$$ GL11.glEnable(GL11.GL_TEXTURE_2D);
         //#endif
 
         // draw camera cube
@@ -342,7 +342,7 @@ public class PathPreviewRenderer extends EventRegistrations {
 
         double r = -cubeSize/2;
 
-        buffer.begin(GL11.GL_QUADS, VertexFormats.POSITION_TEXTURE_COLOR);
+        buffer.begin(net.minecraft.client.render.VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE_COLOR);
 
         //back
         buffer.vertex(r, r + cubeSize, r).texture(3 * 8 / 64f, 8 / 64f).color(255, 255, 255, 200).next();
@@ -381,8 +381,8 @@ public class PathPreviewRenderer extends EventRegistrations {
         buffer.vertex(r + cubeSize, r + cubeSize, r).texture(2 * 8 / 64f, 0).color(255, 255, 255, 200).next();
 
         //#if MC>=11700
-        //$$ RenderSystem.applyModelViewMatrix();
-        //$$ RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
+        RenderSystem.applyModelViewMatrix();
+        RenderSystem.setShader(GameRenderer::getPositionTexColorProgram);
         //#endif
         tessellator.draw();
 

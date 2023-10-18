@@ -19,7 +19,7 @@ import io.netty.channel.ChannelHandlerContext;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.network.NetworkState;
 import net.minecraft.network.NetworkSide;
-import net.minecraft.network.Packet;
+import net.minecraft.network.packet.Packet;
 import net.minecraft.network.PacketByteBuf;
 
 import javax.annotation.Nullable;
@@ -84,9 +84,9 @@ public class QuickReplaySender extends ChannelHandlerAdapter implements ReplaySe
                 //$$ Packet mcPacket;
                 //#endif
                 //#if MC>=11700
-                //$$ mcPacket = NetworkState.PLAY.getPacketHandler(NetworkSide.CLIENTBOUND, packet.getId(), packetByteBuf);
+                mcPacket = NetworkState.PLAY.getPacketHandler(NetworkSide.CLIENTBOUND, packet.getId(), packetByteBuf);
                 //#elseif MC>=11500
-                mcPacket = NetworkState.PLAY.getPacketHandler(NetworkSide.CLIENTBOUND, packet.getId());
+                //$$ mcPacket = NetworkState.PLAY.getPacketHandler(NetworkSide.CLIENTBOUND, packet.getId());
                 //#else
                 //$$ try {
                 //$$     mcPacket = NetworkState.PLAY.getPacketHandler(NetworkSide.CLIENTBOUND, packet.getId());
@@ -97,12 +97,12 @@ public class QuickReplaySender extends ChannelHandlerAdapter implements ReplaySe
                 //#endif
                 if (mcPacket != null) {
                     //#if MC<11700
-                    try {
-                        mcPacket.read(packetByteBuf);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        return;
-                    }
+                    //$$ try {
+                    //$$     mcPacket.read(packetByteBuf);
+                    //$$ } catch (IOException e) {
+                    //$$     e.printStackTrace();
+                    //$$     return;
+                    //$$ }
                     //#endif
 
                     ctx.fireChannelRead(mcPacket);
@@ -167,7 +167,7 @@ public class QuickReplaySender extends ChannelHandlerAdapter implements ReplaySe
             public void onFailure(Throwable t) {
                 // Error already printed by initialize method
             }
-        });
+        }, Runnable::run);
     }
 
     public void restart() {

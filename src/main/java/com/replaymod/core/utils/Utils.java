@@ -241,7 +241,7 @@ public class Utils {
             public void onFailure(@Nonnull Throwable t) {
                 onFailure.accept(t);
             }
-        });
+        }, Runnable::run);
     }
 
     public static GuiInfoPopup error(Logger logger, GuiContainer container, CrashReport crashReport, Runnable onClose) {

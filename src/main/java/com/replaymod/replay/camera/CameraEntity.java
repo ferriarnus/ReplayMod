@@ -44,9 +44,9 @@ import net.minecraft.util.math.Box;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.fluid.Fluid;
 //#if MC>=11802
-//$$ import net.minecraft.tag.TagKey;
+import net.minecraft.registry.tag.TagKey;
 //#else
-import net.minecraft.tag.Tag;
+//$$ import net.minecraft.tag.Tag;
 //#endif
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
@@ -217,8 +217,8 @@ public class CameraEntity
     public void setCameraRotation(float yaw, float pitch, float roll) {
         this.prevYaw = yaw;
         this.prevPitch = pitch;
-        this.yaw = yaw;
-        this.pitch = pitch;
+        this.setYaw(yaw);
+        this.setPitch(pitch);
         this.roll = roll;
     }
 
@@ -248,8 +248,8 @@ public class CameraEntity
         this.prevYaw = to.prevYaw;
         this.prevPitch = to.prevPitch;
         this.setPos(to.getX(), to.getY(), to.getZ());
-        this.yaw = to.yaw;
-        this.pitch = to.pitch;
+        this.setYaw(to.getYaw());
+        this.setPitch(to.getPitch());
         this.lastRenderX = to.lastRenderX;
         this.lastRenderY = to.lastRenderY + yOffset;
         this.lastRenderZ = to.lastRenderZ;
@@ -262,7 +262,7 @@ public class CameraEntity
     public float getYaw(float tickDelta) {
         Entity view = this.client.getCameraEntity();
         if (view != null && view != this) {
-            return this.prevYaw + (this.yaw - this.prevYaw) * tickDelta;
+            return this.prevYaw + (this.getYaw() - this.prevYaw) * tickDelta;
         }
         return super.getYaw(tickDelta);
     }
@@ -271,7 +271,7 @@ public class CameraEntity
     public float getPitch(float tickDelta) {
         Entity view = this.client.getCameraEntity();
         if (view != null && view != this) {
-            return this.prevPitch + (this.pitch - this.prevPitch) * tickDelta;
+            return this.prevPitch + (this.getPitch() - this.prevPitch) * tickDelta;
         }
         return super.getPitch(tickDelta);
     }
@@ -305,14 +305,14 @@ public class CameraEntity
             // entity is recreated and we have to spectate a new entity
             UUID spectating = ReplayModReplay.instance.getReplayHandler().getSpectatedUUID();
             if (spectating != null && (view.getUuid() != spectating
-                    || view.world != this.world)
-                    || this.world.getEntityById(view.getEntityId()) != view) {
+                    || view.getWorld() != this.getWorld())
+                    || this.getWorld().getEntityById(view.getId()) != view) {
                 if (spectating == null) {
                     // Entity (non-player) died, stop spectating
                     ReplayModReplay.instance.getReplayHandler().spectateEntity(this);
                     return;
                 }
-                view = this.world.getPlayerByUuid(spectating);
+                view = this.getWorld().getPlayerByUuid(spectating);
                 if (view != null) {
                     this.client.setCameraEntity(view);
                 } else {
@@ -329,17 +329,17 @@ public class CameraEntity
     }
 
     @Override
-    public void afterSpawn() {
+    public void init() {
         // Make sure our world is up-to-date in case of world changes
         if (this.client.world != null) {
             // FIXME cannot use Patters because `setWorld` is `protected` in 1.20
             //#if MC>=12000
-            //$$ this.setWorld(this.client.world);
+            this.setWorld(this.client.world);
             //#else
-            this.world = this.client.world;
+            //$$ this.world = this.client.world;
             //#endif
         }
-        super.afterSpawn();
+        super.init();
     }
 
     @Override
@@ -366,9 +366,9 @@ public class CameraEntity
     @Override
     public boolean isSubmergedIn(
             //#if MC>=11802
-            //$$ TagKey<Fluid> fluid
+            TagKey<Fluid> fluid
             //#else
-            Tag<Fluid> fluid
+            //$$ Tag<Fluid> fluid
             //#endif
     ) {
         return falseUnlessSpectating(entity -> entity.isSubmergedIn(fluid));
@@ -423,7 +423,7 @@ public class CameraEntity
     //#endif
 
     @Override
-    public boolean collides() {
+    public boolean canHit() {
         return false; // We are a camera, we cannot collide
     }
 
@@ -452,10 +452,10 @@ public class CameraEntity
 
     //#if MC>=10800
     @Override
-    public float getSpeed() {
+    public float getFovMultiplier() {
         Entity view = this.client.getCameraEntity();
         if (view != this && view instanceof AbstractClientPlayerEntity) {
-            return ((AbstractClientPlayerEntity) view).getSpeed();
+            return ((AbstractClientPlayerEntity) view).getFovMultiplier();
         }
         return 1;
     }
@@ -565,9 +565,9 @@ public class CameraEntity
     //#if MC>=11400
     @Override
     //#if MC>=11900
-    //$$ public void onEquipStack(EquipmentSlot slot, ItemStack stack, ItemStack itemStack) {
+    public void onEquipStack(EquipmentSlot slot, ItemStack stack, ItemStack itemStack) {
     //#else
-    protected void onEquipStack(ItemStack itemStack_1) {
+    //$$ protected void onEquipStack(ItemStack itemStack_1) {
     //#endif
         // Suppress equip sounds
     }
@@ -637,11 +637,11 @@ public class CameraEntity
 
     @Override
     //#if MC>=11700
-    //$$ public void remove(RemovalReason reason) {
-    //$$     super.remove(reason);
+    public void remove(RemovalReason reason) {
+        super.remove(reason);
     //#else
-    public void remove() {
-        super.remove();
+    //$$ public void remove() {
+    //$$     super.remove();
     //#endif
         if (eventHandler != null) {
             eventHandler.unregister();
@@ -651,7 +651,7 @@ public class CameraEntity
 
     private void update() {
         MinecraftClient mc = MinecraftClient.getInstance();
-        if (mc.world != this.world) {
+        if (mc.world != this.getWorld()) {
             if (eventHandler != null) {
                 eventHandler.unregister();
                 eventHandler = null;
@@ -681,7 +681,7 @@ public class CameraEntity
         syncInventory();
     }
 
-    private final PlayerInventory originalInventory = this.inventory;
+    private final PlayerInventory originalInventory = this.getInventory();
 
     // If we are spectating a player, "steal" its inventory so the rendering code knows what item(s) to render
     // and if we aren't, then reset ours.
@@ -718,7 +718,7 @@ public class CameraEntity
     }
 
     private void handleInputEvents() {
-        if (this.client.options.keyAttack.wasPressed() || this.client.options.keyUse.wasPressed()) {
+        if (this.client.options.attackKey.wasPressed() || this.client.options.useKey.wasPressed()) {
             if (this.client.currentScreen == null && canSpectate(this.client.targetedEntity)) {
                 ReplayModReplay.instance.getReplayHandler().spectateEntity(
                         //#if MC<=10710
@@ -727,7 +727,7 @@ public class CameraEntity
                         this.client.targetedEntity);
                 // Make sure we don't exit right away
                 //noinspection StatementWithEmptyBody
-                while (this.client.options.keySneak.wasPressed());
+                while (this.client.options.sneakKey.wasPressed());
             }
         }
     }
@@ -735,8 +735,8 @@ public class CameraEntity
     private void updateArmYawAndPitch() {
         this.lastRenderYaw = this.renderYaw;
         this.lastRenderPitch = this.renderPitch;
-        this.renderPitch = this.renderPitch +  (this.pitch - this.renderPitch) * 0.5f;
-        this.renderYaw = this.renderYaw + wrapDegrees(this.yaw - this.renderYaw) * 0.5f;
+        this.renderPitch = this.renderPitch +  (this.getPitch() - this.renderPitch) * 0.5f;
+        this.renderYaw = this.renderYaw + wrapDegrees(this.getYaw() - this.renderYaw) * 0.5f;
         this.wrapArmYaw();
     }
 
@@ -748,7 +748,7 @@ public class CameraEntity
      * outside the normal range.
      */
     private void wrapArmYaw() {
-        this.renderYaw = wrapDegreesTo(this.renderYaw, this.yaw);
+        this.renderYaw = wrapDegreesTo(this.renderYaw, this.getYaw());
         this.lastRenderYaw = wrapDegreesTo(this.lastRenderYaw, this.renderYaw);
     }
 
@@ -862,8 +862,8 @@ public class CameraEntity
                     //#endif
 
 
-                    mc.player.renderYaw = mc.player.lastRenderYaw = player.yaw;
-                    mc.player.renderPitch = mc.player.lastRenderPitch = player.pitch;
+                    mc.player.renderYaw = mc.player.lastRenderYaw = player.getYaw();
+                    mc.player.renderPitch = mc.player.lastRenderPitch = player.getPitch();
                 }
                 return false;
             }

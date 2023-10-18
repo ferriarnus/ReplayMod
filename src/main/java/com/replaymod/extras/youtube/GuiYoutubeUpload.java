@@ -233,7 +233,7 @@ public class GuiYoutubeUpload extends GuiScreen {
                             upload = null;
                             setState(false);
                         }
-                    });
+                    }, Runnable::run);
                 } catch (GeneralSecurityException | IOException e) {
                     e.printStackTrace();
                 }

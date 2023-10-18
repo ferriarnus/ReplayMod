@@ -1,6 +1,6 @@
 package com.replaymod.render.mixin;
 
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.replaymod.core.versions.MCVer;
 import com.replaymod.render.hooks.EntityRendererHandler;
 import net.minecraft.client.render.BackgroundRenderer;
@@ -30,8 +30,8 @@ public abstract class Mixin_ChromaKeyDisableFog {
             //       start, as would be the case in these cases. Sodium doing math is also the reason we don't set start
             //       equal to end (that'll result in undefined behavior because it sticks those into a smoothstep on old
             //       versions), and we don't set it to MAX_VALUE because that also gives wrong results.
-            GlStateManager.fogStart(1E10F);
-            GlStateManager.fogEnd(2E10F);
+            RenderSystem.setShaderFogStart(1E10F);
+            RenderSystem.setShaderFogEnd(2E10F);
             ci.cancel();
         }
     }

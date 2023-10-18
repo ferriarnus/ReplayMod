@@ -6,18 +6,18 @@ import com.replaymod.replaystudio.replay.ReplayFile;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.ConfirmScreen;
 import net.minecraft.client.network.ServerInfo;
-import net.minecraft.client.options.ServerList;
-import net.minecraft.client.resource.ClientBuiltinResourcePackProvider;
+import net.minecraft.client.option.ServerList;
+import net.minecraft.client.resource.ServerResourcePackProvider;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 //#if MC>=11900
-//$$ import java.net.MalformedURLException;
-//$$ import java.net.URL;
+import java.net.MalformedURLException;
+import java.net.URL;
 //#endif
 
 //#if MC>=11400
-import net.minecraft.text.TranslatableText;
+import net.minecraft.text.TranslatableTextContent;
 //#else
 //$$ import net.minecraft.client.gui.GuiYesNoCallback;
 //$$ import net.minecraft.client.resources.I18n;
@@ -138,15 +138,15 @@ public class ResourcePackRecorder {
             }
         } else {
             final ServerInfo serverData = mc.getCurrentServerEntry();
-            if (serverData != null && serverData.getResourcePack() == ServerInfo.ResourcePackState.ENABLED) {
+            if (serverData != null && serverData.getResourcePackPolicy() == ServerInfo.ResourcePackPolicy.ENABLED) {
                 netManager.send(makeStatusPacket(hash, Status.ACCEPTED));
                 downloadResourcePackFuture(netManager, requestId, url, hash);
-            } else if (serverData != null && serverData.getResourcePack() != ServerInfo.ResourcePackState.PROMPT) {
+            } else if (serverData != null && serverData.getResourcePackPolicy() != ServerInfo.ResourcePackPolicy.PROMPT) {
                 netManager.send(makeStatusPacket(hash, Status.DECLINED));
             } else {
                 // Lambdas MUST NOT be used with methods that need re-obfuscation in FG prior to 2.2 (will result in AbstractMethodError)
                 //#if MC>=11400
-                mc.execute(() -> mc.openScreen(new ConfirmScreen(result -> {
+                mc.execute(() -> mc.setScreen(new ConfirmScreen(result -> {
                 //#else
                 //$$ //noinspection Convert2Lambda
                 //$$ mc.addScheduledTask(() -> mc.displayGuiScreen(new GuiYesNo(new GuiYesNoCallback() {
@@ -154,7 +154,7 @@ public class ResourcePackRecorder {
                 //$$     public void confirmClicked(boolean result, int id) {
                 //#endif
                         if (serverData != null) {
-                            serverData.setResourcePackState(result ? ServerInfo.ResourcePackState.ENABLED : ServerInfo.ResourcePackState.DISABLED);
+                            serverData.setResourcePackPolicy(result ? ServerInfo.ResourcePackPolicy.ENABLED : ServerInfo.ResourcePackPolicy.DISABLED);
                         }
                         if (result) {
                             netManager.send(makeStatusPacket(hash, Status.ACCEPTED));
@@ -164,10 +164,10 @@ public class ResourcePackRecorder {
                         }
 
                         ServerList.updateServerListEntry(serverData);
-                        mc.openScreen(null);
+                        mc.setScreen(null);
                     }
                 //#if MC>=11400
-                , new TranslatableText("multiplayer.texturePrompt.line1"), new TranslatableText("multiplayer.texturePrompt.line2"))));
+                , net.minecraft.text.Text.translatable("multiplayer.texturePrompt.line1"), net.minecraft.text.Text.translatable("multiplayer.texturePrompt.line2"))));
                 //#else
                 //$$ }, I18n.format("multiplayer.texturePrompt.line1"), I18n.format("multiplayer.texturePrompt.line2"), 0)));
                 //#endif
@@ -177,7 +177,7 @@ public class ResourcePackRecorder {
         return new ResourcePackSendS2CPacket(
                 "replay://" + requestId, ""
                 //#if MC>=11700
-                //$$ , packet.isRequired(), packet.getPrompt()
+                , packet.isRequired(), packet.getPrompt()
                 //#endif
         );
     }
@@ -195,23 +195,23 @@ public class ResourcePackRecorder {
     //$$ ListenableFuture<?>
     //#endif
     downloadResourcePack(final int requestId, String url, String hash) {
-        ClientBuiltinResourcePackProvider packFinder = mc.getResourcePackDownloader();
+        ServerResourcePackProvider packFinder = mc.getServerResourcePackProvider();
         ((IDownloadingPackFinder) packFinder).setRequestCallback(file -> recordResourcePack(file, requestId));
         //#if MC>=11900
-        //$$ try {
-        //$$     URL theUrl = new URL(url);
-        //$$     String protocol = theUrl.getProtocol();
-        //$$     if (!"http".equals(protocol) && !"https".equals(protocol)) {
-        //$$         throw new MalformedURLException("Unsupported protocol.");
-        //$$     }
-        //$$     return packFinder.download(theUrl, hash, true);
-        //$$ } catch (MalformedURLException e) {
-        //$$     return CompletableFuture.failedFuture(e);
-        //$$ }
+        try {
+            URL theUrl = new URL(url);
+            String protocol = theUrl.getProtocol();
+            if (!"http".equals(protocol) && !"https".equals(protocol)) {
+                throw new MalformedURLException("Unsupported protocol.");
+            }
+            return packFinder.download(theUrl, hash, true);
+        } catch (MalformedURLException e) {
+            return CompletableFuture.failedFuture(e);
+        }
         //#elseif MC>=11700
         //$$ return packFinder.download(url, hash, true);
         //#else
-        return packFinder.download(url, hash);
+        //$$ return packFinder.download(url, hash);
         //#endif
     }
 

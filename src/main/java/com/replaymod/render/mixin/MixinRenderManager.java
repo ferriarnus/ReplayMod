@@ -12,8 +12,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 //#if MC>=11500
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.client.util.math.Vector3f;
-import net.minecraft.util.math.Quaternion;
+import org.joml.Vector3f;
+import org.joml.Quaternionf;
 //#endif
 
 //#if MC>=10904
@@ -25,7 +25,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(EntityRenderDispatcher.class)
 public abstract class MixinRenderManager {
     //#if MC>=11500
-    @Shadow private Quaternion rotation;
+    @Shadow private Quaternionf rotation;
     //#else
     //$$ @Shadow private float cameraPitch;
     //$$ @Shadow private float cameraYaw;
@@ -62,9 +62,9 @@ public abstract class MixinRenderManager {
             double pitch = -Math.atan2(dy, Math.sqrt(dx * dx + dz * dz));
             double yaw = -Math.atan2(dx, dz);
             //#if MC>=11500
-            this.rotation = new Quaternion(0.0F, 0.0F, 0.0F, 1.0F);
-            this.rotation.hamiltonProduct(Vector3f.POSITIVE_Y.getDegreesQuaternion((float) -yaw));
-            this.rotation.hamiltonProduct(Vector3f.POSITIVE_X.getDegreesQuaternion((float) pitch));
+            this.rotation = new Quaternionf(0.0F, 0.0F, 0.0F, 1.0F);
+            this.rotation.mul(new org.joml.Quaternionf().fromAxisAngleDeg(new org.joml.Vector3f(0, 1, 0), (float) -yaw));
+            this.rotation.mul(new org.joml.Quaternionf().fromAxisAngleDeg(new org.joml.Vector3f(1, 0, 0), (float) pitch));
             //#else
             //$$ this.cameraPitch = (float) Math.toDegrees(pitch);
             //$$ this.cameraYaw = (float) Math.toDegrees(yaw);

@@ -1,6 +1,6 @@
 package com.replaymod.render.capturer;
 
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.replaymod.core.versions.MCVer;
 import com.replaymod.render.frame.OpenGlFrame;
 import com.replaymod.render.rendering.Frame;
@@ -83,13 +83,13 @@ public abstract class OpenGlFrameCapturer<F extends Frame, D extends CaptureData
         pushMatrix();
         frameBuffer().beginWrite(true);
 
-        GlStateManager.clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT
+        RenderSystem.clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT
                 //#if MC>=11400
                 , false
                 //#endif
         );
         //#if MC<11904
-        GlStateManager.enableTexture();
+        //$$ RenderSystem.enableTexture();
         //#endif
 
         worldRenderer.renderWorld(partialTicks, captureData);

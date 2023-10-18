@@ -4,7 +4,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.replaymod.core.ReplayMod;
 import com.replaymod.core.mixin.MinecraftAccessor;
 import com.replaymod.core.mixin.TimerAccessor;
@@ -43,17 +43,17 @@ import java.io.IOException;
 import java.util.*;
 
 //#if MC>=12000
-//$$ import com.mojang.blaze3d.systems.VertexSorter;
-//$$ import net.minecraft.client.gui.DrawContext;
+import com.mojang.blaze3d.systems.VertexSorter;
+import net.minecraft.client.gui.DrawContext;
 //#endif
 
 //#if MC>=11904
-//$$ import net.minecraft.network.PacketBundler;
+import net.minecraft.network.PacketBundler;
 //#endif
 
 //#if MC>=11700
-//$$ import net.minecraft.client.render.DiffuseLighting;
-//$$ import net.minecraft.util.math.Matrix4f;
+import net.minecraft.client.render.DiffuseLighting;
+import org.joml.Matrix4f;
 //#endif
 
 //#if MC>=11600
@@ -230,7 +230,7 @@ public class ReplayHandler {
         if (mc.player instanceof CameraEntity) {
             //#if MC<11700
             //#if MC>=11400
-            mc.player.remove();
+            //$$ mc.player.remove();
             //#else
             //$$ mc.player.setDead();
             //#endif
@@ -256,7 +256,7 @@ public class ReplayHandler {
 
         ReplayModReplay.instance.forcefullyStopReplay();
 
-        mc.openScreen(null);
+        mc.setScreen(null);
 
         ReplayClosedCallback.EVENT.invoker().replayClosed(this);
     }
@@ -306,9 +306,9 @@ public class ReplayHandler {
                 mc,
                 null
                 //#if MC>=11903
-                //$$ , null
-                //$$ , false
-                //$$ , null
+                , null
+                , false
+                , null
                 //#endif
                 //#if MC>=11400
                 , it -> {}
@@ -328,7 +328,7 @@ public class ReplayHandler {
         //#endif
         channel.pipeline().addLast("ReplayModReplay_replaySender", fullReplaySender);
         //#if MC>=11904
-        //$$ channel.pipeline().addLast("bundler", new PacketBundler(NetworkSide.CLIENTBOUND));
+        channel.pipeline().addLast("bundler", new PacketBundler(NetworkSide.CLIENTBOUND));
         //#endif
         channel.pipeline().addLast("packet_handler", networkManager);
         channel.pipeline().fireChannelActive();
@@ -380,7 +380,7 @@ public class ReplayHandler {
                     String message = "Failed to initialize quick mode. It will not be available.";
                     Utils.error(LOGGER, overlay, CrashReport.create(t, message), popup::close);
                 }
-            });
+            }, Runnable::run);
         }
         Futures.addCallback(future, new FutureCallback<Void>() {
             @Override
@@ -392,7 +392,7 @@ public class ReplayHandler {
             public void onFailure(@Nonnull Throwable t) {
                 // Exception already printed in callback added above
             }
-        });
+        }, Runnable::run);
     }
 
     private class InitializingQuickModePopup extends AbstractGuiPopup<InitializingQuickModePopup> {
@@ -431,7 +431,7 @@ public class ReplayHandler {
 
         CameraEntity cam = getCameraEntity();
         if (cam != null) {
-            targetCameraPosition = new Location(cam.getX(), cam.getY(), cam.getZ(), cam.yaw, cam.pitch);
+            targetCameraPosition = new Location(cam.getX(), cam.getY(), cam.getZ(), cam.getYaw(), cam.getPitch());
         } else {
             targetCameraPosition = null;
         }
@@ -576,8 +576,8 @@ public class ReplayHandler {
                 entity.lastRenderX = entity.prevX = entity.getX();
                 entity.lastRenderY = entity.prevY = entity.getY();
                 entity.lastRenderZ = entity.prevZ = entity.getZ();
-                entity.prevYaw = entity.yaw;
-                entity.prevPitch = entity.pitch;
+                entity.prevYaw = entity.getYaw();
+                entity.prevPitch = entity.getPitch();
             }
 
             // Run previous tick
@@ -608,14 +608,14 @@ public class ReplayHandler {
         }
 
         if (targetTime < replaySender.currentTimeStamp()) {
-            mc.openScreen(null);
+            mc.setScreen(null);
         }
 
         if (retainCameraPosition) {
             CameraEntity cam = getCameraEntity();
             if (cam != null) {
                 targetCameraPosition = new Location(cam.getX(), cam.getY(), cam.getZ(),
-                        cam.yaw, cam.pitch);
+                        cam.getYaw(), cam.getPitch());
             } else {
                 targetCameraPosition = null;
             }
@@ -638,43 +638,36 @@ public class ReplayHandler {
 
                 // Perform the rendering using OpenGL
                 pushMatrix();
-                GlStateManager.clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT
+                RenderSystem.clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT
                         //#if MC>=11400
                         , true
                         //#endif
                 );
                 //#if MC<11904
-                GlStateManager.enableTexture();
+                //$$ RenderSystem.enableTexture();
                 //#endif
                 mc.getFramebuffer().beginWrite(true);
                 Window window = mc.getWindow();
                 //#if MC>=11500
                 RenderSystem.clear(256, MinecraftClient.IS_SYSTEM_MAC);
                 //#if MC>=11700
-                //$$ RenderSystem.setProjectionMatrix(Matrix4f.projectionMatrix(
-                //$$         0,
-                //$$         (float) (window.getFramebufferWidth() / window.getScaleFactor()),
-                //$$         0,
-                //$$         (float) (window.getFramebufferHeight() / window.getScaleFactor()),
-                //$$         1000,
-                //$$         3000
-                //$$     )
+                RenderSystem.setProjectionMatrix(com.replaymod.core.versions.MCVer.ortho(0, (float) (window.getFramebufferWidth() / window.getScaleFactor()), 0, (float) (window.getFramebufferHeight() / window.getScaleFactor()), 1000, 3000)
                         //#if MC>=12000
-                        //$$ , VertexSorter.BY_Z
+                        , VertexSorter.BY_Z
                         //#endif
-                //$$ );
-                //$$ MatrixStack matrixStack = RenderSystem.getModelViewStack();
-                //$$ matrixStack.loadIdentity();
-                //$$ matrixStack.translate(0, 0, -2000);
-                //$$ RenderSystem.applyModelViewMatrix();
-                //$$ DiffuseLighting.enableGuiDepthLighting();
+                );
+                MatrixStack matrixStack = RenderSystem.getModelViewStack();
+                matrixStack.loadIdentity();
+                matrixStack.translate(0, 0, -2000);
+                RenderSystem.applyModelViewMatrix();
+                DiffuseLighting.enableGuiDepthLighting();
                 //#else
-                RenderSystem.matrixMode(GL11.GL_PROJECTION);
-                RenderSystem.loadIdentity();
-                RenderSystem.ortho(0, window.getFramebufferWidth() / window.getScaleFactor(), window.getFramebufferHeight() / window.getScaleFactor(), 0, 1000, 3000);
-                RenderSystem.matrixMode(GL11.GL_MODELVIEW);
-                RenderSystem.loadIdentity();
-                RenderSystem.translatef(0, 0, -2000);
+                //$$ RenderSystem.matrixMode(GL11.GL_PROJECTION);
+                //$$ RenderSystem.loadIdentity();
+                //$$ RenderSystem.ortho(0, window.getFramebufferWidth() / window.getScaleFactor(), window.getFramebufferHeight() / window.getScaleFactor(), 0, 1000, 3000);
+                //$$ RenderSystem.matrixMode(GL11.GL_MODELVIEW);
+                //$$ RenderSystem.loadIdentity();
+                //$$ RenderSystem.translatef(0, 0, -2000);
                 //#endif
                 //#else
                 //#if MC>=11400
@@ -686,9 +679,9 @@ public class ReplayHandler {
 
                 guiScreen.toMinecraft().init(mc, window.getScaledWidth(), window.getScaledHeight());
                 //#if MC>=12000
-                //$$ guiScreen.toMinecraft().render(new DrawContext(mc, mc.getBufferBuilders().getEntityVertexConsumers()), 0, 0, 0);
+                guiScreen.toMinecraft().render(new DrawContext(mc, mc.getBufferBuilders().getEntityVertexConsumers()), 0, 0, 0);
                 //#elseif MC>=11600
-                guiScreen.toMinecraft().render(new MatrixStack(), 0, 0, 0);
+                //$$ guiScreen.toMinecraft().render(new MatrixStack(), 0, 0, 0);
                 //#else
                 //#if MC>=11400
                 //$$ guiScreen.toMinecraft().render(0, 0, 0);
@@ -746,8 +739,8 @@ public class ReplayHandler {
                     entity.lastRenderX = entity.prevX = entity.getX();
                     entity.lastRenderY = entity.prevY = entity.getY();
                     entity.lastRenderZ = entity.prevZ = entity.getZ();
-                    entity.prevYaw = entity.yaw;
-                    entity.prevPitch = entity.pitch;
+                    entity.prevYaw = entity.getYaw();
+                    entity.prevPitch = entity.getPitch();
                 }
                 //#if MC>=10800 && MC<11400
                 //$$ try {
@@ -774,8 +767,8 @@ public class ReplayHandler {
             LivingEntity e = (LivingEntity) entity;
             EntityLivingBaseAccessor ea = (EntityLivingBaseAccessor) e;
             e.updatePosition(ea.getInterpTargetX(), ea.getInterpTargetY(), ea.getInterpTargetZ());
-            e.yaw = (float) ea.getInterpTargetYaw();
-            e.pitch = (float) ea.getInterpTargetPitch();
+            e.setYaw((float) ea.getInterpTargetYaw());
+            e.setPitch((float) ea.getInterpTargetPitch());
         }
         //#else
         //$$ if (entity instanceof EntityOtherPlayerMP) {

@@ -20,7 +20,7 @@ import net.minecraft.network.ClientConnection;
 import org.apache.logging.log4j.Logger;
 
 //#if MC>=11900
-//$$ import com.replaymod.recording.mixin.ClientLoginNetworkHandlerAccessor;
+import com.replaymod.recording.mixin.ClientLoginNetworkHandlerAccessor;
 //#endif
 
 //#if MC>=11600
@@ -94,11 +94,11 @@ public class ConnectionEventHandler {
 
             ServerInfo serverInfo;
             //#if MC>=11903
-            //$$ serverInfo = networkManager.getPacketListener() instanceof ClientLoginNetworkHandlerAccessor loginNetworkHandler
-            //$$         ? loginNetworkHandler.getServerInfo()
-            //$$         : null;
+            serverInfo = networkManager.getPacketListener() instanceof ClientLoginNetworkHandlerAccessor loginNetworkHandler
+                    ? loginNetworkHandler.getServerInfo()
+                    : null;
             //#else
-            serverInfo = mc.getCurrentServerEntry();
+            //$$ serverInfo = mc.getCurrentServerEntry();
             //#endif
 
             String worldName;

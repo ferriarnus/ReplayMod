@@ -69,7 +69,7 @@ import static com.replaymod.replay.ReplayModReplay.LOGGER;
 import static de.johni0702.minecraft.gui.versions.MCVer.getFontRenderer;
 
 //#if MC>=11400
-import net.minecraft.text.TranslatableText;
+import net.minecraft.text.TranslatableTextContent;
 //#else
 //$$ import net.minecraft.client.resources.I18n;
 //#endif
@@ -164,11 +164,11 @@ public class GuiReplayViewer extends GuiScreen {
                 } catch (IOException e) {
                     // We failed (might also be their OS)
                     e.printStackTrace();
-                    getMinecraft().openScreen(new NoticeScreen(
+                    getMinecraft().setScreen(new NoticeScreen(
                             //#if MC>=11400
                             GuiReplayViewer.this::display,
-                            new TranslatableText("replaymod.gui.viewer.delete.failed1"),
-                            new TranslatableText("replaymod.gui.viewer.delete.failed2")
+                            net.minecraft.text.Text.translatable("replaymod.gui.viewer.delete.failed1"),
+                            net.minecraft.text.Text.translatable("replaymod.gui.viewer.delete.failed2")
                             //#else
                             //$$ I18n.format("replaymod.gui.viewer.delete.failed1"),
                             //$$ I18n.format("replaymod.gui.viewer.delete.failed2")
@@ -206,7 +206,7 @@ public class GuiReplayViewer extends GuiScreen {
     public final GuiButton cancelButton = new GuiButton().onClick(new Runnable() {
         @Override
         public void run() {
-            getMinecraft().openScreen(null);
+            getMinecraft().setScreen(null);
         }
     }).setSize(73, 20).setI18nLabel("replaymod.gui.cancel");
 

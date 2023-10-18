@@ -34,9 +34,9 @@ public abstract class MixinMouseHelper {
             CallbackInfo ci,
             double _l1,
             //#if MC>=11802
-            //$$ int yOffsetAccumulated
+            int yOffsetAccumulated
             //#elseif MC>=11400
-            float yOffsetAccumulated
+            //$$ float yOffsetAccumulated
             //#else
             //$$ double yOffsetAccumulated
             //#endif

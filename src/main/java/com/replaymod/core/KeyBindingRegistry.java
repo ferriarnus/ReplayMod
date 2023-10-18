@@ -7,7 +7,7 @@ import com.replaymod.core.mixin.KeyBindingAccessor;
 import de.johni0702.minecraft.gui.utils.EventRegistrations;
 import com.replaymod.core.events.KeyBindingEventCallback;
 import com.replaymod.core.events.KeyEventCallback;
-import net.minecraft.client.options.KeyBinding;
+import net.minecraft.client.option.KeyBinding;
 import net.minecraft.util.crash.CrashReport;
 import net.minecraft.util.crash.CrashReportSection;
 import net.minecraft.util.crash.CrashException;

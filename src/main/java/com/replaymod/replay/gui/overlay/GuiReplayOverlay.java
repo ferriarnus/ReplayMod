@@ -22,7 +22,7 @@ import de.johni0702.minecraft.gui.utils.EventRegistrations;
 import de.johni0702.minecraft.gui.utils.lwjgl.ReadableDimension;
 import de.johni0702.minecraft.gui.utils.lwjgl.ReadablePoint;
 import de.johni0702.minecraft.gui.utils.lwjgl.WritablePoint;
-import net.minecraft.client.options.GameOptions;
+import net.minecraft.client.option.GameOptions;
 import net.minecraft.client.resource.language.I18n;
 
 import static com.replaymod.core.ReplayMod.TEXTURE_SIZE;
@@ -174,7 +174,7 @@ public class GuiReplayOverlay extends AbstractGuiOverlay<GuiReplayOverlay> {
         { on(KeyBindingEventCallback.EVENT, this::onKeyBindingEvent); }
         private void onKeyBindingEvent() {
             GameOptions gameSettings = getMinecraft().options;
-            while (gameSettings.keyChat.wasPressed() || gameSettings.keyCommand.wasPressed()) {
+            while (gameSettings.chatKey.wasPressed() || gameSettings.commandKey.wasPressed()) {
                 if (!isMouseVisible()) {
                     setMouseVisible(true);
                 }

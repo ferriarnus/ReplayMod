@@ -1,6 +1,6 @@
 package com.replaymod.render.mixin;
 
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.replaymod.render.hooks.EntityRendererHandler;
 import de.johni0702.minecraft.gui.utils.lwjgl.ReadableColor;
 import net.minecraft.client.MinecraftClient;
@@ -21,16 +21,16 @@ public abstract class Mixin_ChromaKeyColorSky {
     @Shadow @Final private MinecraftClient client;
 
     //#if MC>=11800
-    //$$ @Inject(
+    @Inject(
             //#if MC>=11802
-            //$$ method = "renderSky(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/util/math/Matrix4f;FLnet/minecraft/client/render/Camera;ZLjava/lang/Runnable;)V",
+            method = "renderSky(Lnet/minecraft/client/util/math/MatrixStack;Lorg/joml/Matrix4f;FLnet/minecraft/client/render/Camera;ZLjava/lang/Runnable;)V",
             //#else
             //$$ method = "renderSky(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/util/math/Matrix4f;FLjava/lang/Runnable;)V",
             //#endif
-    //$$         at = @At(value = "INVOKE", target = "Ljava/lang/Runnable;run()V", remap = false, shift = At.Shift.AFTER),
-    //$$         cancellable = true)
+            at = @At(value = "INVOKE", target = "Ljava/lang/Runnable;run()V", remap = false, shift = At.Shift.AFTER),
+            cancellable = true)
     //#elseif MC>=11400 || 10710>=MC
-    @Inject(method = "renderSky", at = @At("HEAD"), cancellable = true)
+    //$$ @Inject(method = "renderSky", at = @At("HEAD"), cancellable = true)
     //#else
     //$$ @Inject(method = "renderSky(FI)V", at = @At("HEAD"), cancellable = true)
     //#endif
@@ -39,8 +39,8 @@ public abstract class Mixin_ChromaKeyColorSky {
         if (handler != null) {
             ReadableColor color = handler.getSettings().getChromaKeyingColor();
             if (color != null) {
-                GlStateManager.clearColor(color.getRed() / 255f, color.getGreen() / 255f, color.getBlue() / 255f, 1);
-                GlStateManager.clear(GL11.GL_COLOR_BUFFER_BIT
+                RenderSystem.clearColor(color.getRed() / 255f, color.getGreen() / 255f, color.getBlue() / 255f, 1);
+                RenderSystem.clear(GL11.GL_COLOR_BUFFER_BIT
                         //#if MC>=11400
                         , false
                         //#endif

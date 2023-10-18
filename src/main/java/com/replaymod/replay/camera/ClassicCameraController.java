@@ -2,7 +2,7 @@ package com.replaymod.replay.camera;
 
 import de.johni0702.minecraft.gui.utils.lwjgl.vector.Vector3f;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.options.KeyBinding;
+import net.minecraft.client.option.KeyBinding;
 
 import static net.minecraft.util.math.MathHelper.cos;
 import static net.minecraft.util.math.MathHelper.sin;
@@ -34,7 +34,7 @@ public class ClassicCameraController implements CameraController {
     public void update(float partialTicksPassed) {
         boolean forward = false, backward = false, left = false, right = false, up = false, down = false;
         speedup = false;
-        for(KeyBinding kb : MinecraftClient.getInstance().options.keysAll) {
+        for(KeyBinding kb : MinecraftClient.getInstance().options.allKeys) {
             if(!kb.isPressed()) continue;
             if(kb.getTranslationKey().equals("key.forward")) {
                 forward = true;
@@ -137,7 +137,7 @@ public class ClassicCameraController implements CameraController {
     }
 
     private void setMovement(MoveDirection dir) {
-        float rotationPitch = camera.pitch, rotationYaw = camera.yaw;
+        float rotationPitch = camera.getPitch(), rotationYaw = camera.getYaw();
         switch(dir) {
             case BACKWARD:
                 direction = this.getVectorForRotation(-rotationPitch, rotationYaw - 180);

@@ -2,7 +2,7 @@ package com.replaymod.core.mixin;
 
 import com.replaymod.core.ReplayMod;
 import com.replaymod.replay.ReplayModReplay;
-import net.minecraft.client.options.KeyBinding;
+import net.minecraft.client.option.KeyBinding;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -25,8 +25,8 @@ import java.util.Set;
 @Mixin(KeyBinding.class)
 public class Mixin_ContextualKeyBindings {
     //#if MC>=11200
-    @Shadow @Final private static Map<String, KeyBinding> keysById;
-    @Unique private static Collection<KeyBinding> keyBindings() { return Mixin_ContextualKeyBindings.keysById.values(); }
+    @Shadow @Final private static Map<String, KeyBinding> KEYS_BY_ID;
+    @Unique private static Collection<KeyBinding> keyBindings() { return Mixin_ContextualKeyBindings.KEYS_BY_ID.values(); }
     //#else
     //$$ @Shadow @Final private static List<KeyBinding> KEYBIND_ARRAY;
     //$$ @Unique private static Collection<KeyBinding> keyBindings() { return Mixin_ContextualKeyBindings.KEYBIND_ARRAY; }
@@ -68,7 +68,7 @@ public class Mixin_ContextualKeyBindings {
     private static void postContextualKeyBindings(CallbackInfo ci) {
         for (KeyBinding keyBinding : temporarilyRemoved) {
             //#if MC>=11200
-            Mixin_ContextualKeyBindings.keysById.put(keyBinding.getTranslationKey(), keyBinding);
+            Mixin_ContextualKeyBindings.KEYS_BY_ID.put(keyBinding.getTranslationKey(), keyBinding);
             //#else
             //$$ keyBindings().add(keyBinding);
             //#endif

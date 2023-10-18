@@ -1,6 +1,6 @@
 package com.replaymod.core.versions;
 
-import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.replaymod.core.mixin.GuiScreenAccessor;
 import com.replaymod.replaystudio.lib.viaversion.api.protocol.packet.State;
 import com.replaymod.replaystudio.lib.viaversion.api.protocol.version.ProtocolVersion;
@@ -15,7 +15,7 @@ import net.minecraft.util.Util;
 import net.minecraft.util.math.Vec3d;
 
 //#if MC>=11700
-//$$ import net.minecraft.util.math.Matrix4f;
+import org.joml.Matrix4f;
 //#endif
 
 //#if MC>=11604
@@ -33,14 +33,14 @@ import net.minecraft.SharedConstants;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.ParentElement;
 import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.gui.widget.AbstractButtonWidget;
+import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.util.Window;
 
 import java.util.concurrent.CompletableFuture;
 
 //#if MC>=11600
 import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableText;
+import net.minecraft.text.TranslatableTextContent;
 //#else
 //$$ import net.minecraft.client.resource.language.I18n;
 //#endif
@@ -141,10 +141,10 @@ public class MCVer {
     //#endif
     setServerResourcePack(File file) {
         //#if MC>=11400
-        return getMinecraft().getResourcePackDownloader().loadServerPack(
+        return getMinecraft().getServerResourcePackProvider().loadServerPack(
                 file
                 //#if MC>=11600
-                , ResourcePackSource.PACK_SOURCE_SERVER
+                , ResourcePackSource.SERVER
                 //#endif
         );
         //#else
@@ -224,29 +224,29 @@ public class MCVer {
     }
 
     //#if MC>=11400
-    public static Optional<AbstractButtonWidget> findButton(Iterable<? extends Element> buttonList, @SuppressWarnings("unused") String text, @SuppressWarnings("unused") int id) {
+    public static Optional<ClickableWidget> findButton(Iterable<? extends Element> buttonList, @SuppressWarnings("unused") String text, @SuppressWarnings("unused") int id) {
         //#if MC>=11600
-        final Text message = new TranslatableText(text);
+        final Text message = net.minecraft.text.Text.translatable(text);
         //#else
         //$$ final String message = I18n.translate(text);
         //#endif
         for (Element e : buttonList) {
             if (e instanceof ParentElement) {
-                Optional<AbstractButtonWidget> button = findButton(((ParentElement) e).children(), text, id);
+                Optional<ClickableWidget> button = findButton(((ParentElement) e).children(), text, id);
                 if (button.isPresent()) {
                     return button;
                 }
             }
-            if (!(e instanceof AbstractButtonWidget)) {
+            if (!(e instanceof ClickableWidget)) {
                 continue;
             }
-            AbstractButtonWidget b = (AbstractButtonWidget) e;
+            ClickableWidget b = (ClickableWidget) e;
             if (message.equals(b.getMessage())) {
                 return Optional.of(b);
             }
             //#if MC>=11600
             // Fuzzy match (copy does not include children)
-            if (b.getMessage() != null && b.getMessage().copy().equals(message)) {
+            if (b.getMessage() != null && b.getMessage().copyContentOnly().equals(message)) {
                 return Optional.of(b);
             }
             //#endif
@@ -361,37 +361,37 @@ public class MCVer {
 
     public static void pushMatrix() {
         //#if MC>=11700
-        //$$ RenderSystem.getModelViewStack().push();
+        RenderSystem.getModelViewStack().push();
         //#else
-        GlStateManager.pushMatrix();
+        //$$ GlStateManager.pushMatrix();
         //#endif
     }
 
     public static void popMatrix() {
         //#if MC>=11700
-        //$$ RenderSystem.getModelViewStack().pop();
-        //$$ RenderSystem.applyModelViewMatrix();
+        RenderSystem.getModelViewStack().pop();
+        RenderSystem.applyModelViewMatrix();
         //#else
-        GlStateManager.popMatrix();
+        //$$ GlStateManager.popMatrix();
         //#endif
     }
 
     //#if MC>=11700
-    //$$ public static net.minecraft.util.math.Quaternion quaternion(float angle, net.minecraft.util.math.Vec3f axis) {
+    public static org.joml.Quaternionf quaternion(float angle, org.joml.Vector3f axis) {
         //#if MC>=11903
-        //$$ return new org.joml.Quaternionf().fromAxisAngleDeg(axis.x, axis.y, axis.z, angle);
+        return new org.joml.Quaternionf().fromAxisAngleDeg(axis.x, axis.y, axis.z, angle);
         //#else
         //$$ return new net.minecraft.util.math.Quaternion(axis, angle, true);
         //#endif
-    //$$ }
-    //$$
-    //$$ public static Matrix4f ortho(float left, float right, float top, float bottom, float zNear, float zFar) {
+    }
+
+    public static Matrix4f ortho(float left, float right, float top, float bottom, float zNear, float zFar) {
         //#if MC>=11903
-        //$$ return new Matrix4f().ortho(left, right, bottom, top, zNear, zFar);
+        return new Matrix4f().ortho(left, right, bottom, top, zNear, zFar);
         //#else
         //$$ return Matrix4f.projectionMatrix(left, right, top, bottom, zNear, zFar);
         //#endif
-    //$$ }
+    }
     //#endif
 
     public static void emitLine(BufferBuilder buffer, Vector2f p1, Vector2f p2, int color) {
@@ -404,18 +404,18 @@ public class MCVer {
         int b = color >> 8 & 0xff;
         int a = color & 0xff;
         //#if MC>=11700
-        //$$ Vector3f n = Vector3f.sub(p2, p1, null);
+        Vector3f n = Vector3f.sub(p2, p1, null);
         //#endif
         buffer.vertex(p1.x, p1.y, p1.z)
                 .color(r, g, b, a)
                 //#if MC>=11700
-                //$$ .normal(n.x, n.y, n.z)
+                .normal(n.x, n.y, n.z)
                 //#endif
                 .next();
         buffer.vertex(p2.x, p2.y, p2.z)
                 .color(r, g, b, a)
                 //#if MC>=11700
-                //$$ .normal(n.x, n.y, n.z)
+                .normal(n.x, n.y, n.z)
                 //#endif
                 .next();
     }

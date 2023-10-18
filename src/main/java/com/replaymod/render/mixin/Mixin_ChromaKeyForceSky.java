@@ -28,24 +28,24 @@ public abstract class Mixin_ChromaKeyForceSky {
     @Shadow @Final private MinecraftClient client;
 
     //#if MC>=11700
-    //$$ // Sky appears to be rendered unconditionally now
+    // Sky appears to be rendered unconditionally now
     //#else
     //#if MC>=11500
-    @ModifyConstant(method = "render", constant = @Constant(intValue = 4))
+    //$$ @ModifyConstant(method = "render", constant = @Constant(intValue = 4))
     //#elseif MC>=11400
     //$$ @ModifyConstant(method = "renderCenter", constant = @Constant(intValue = 4))
     //#else
     //$$ @ModifyConstant(method = "renderWorldPass", constant = @Constant(intValue = 4))
     //#endif
-    private int forceSkyWhenChromaKeying(int value) {
-        EntityRendererHandler handler = ((EntityRendererHandler.IEntityRenderer) this.client.gameRenderer).replayModRender_getHandler();
-        if (handler != null) {
-            ReadableColor color = handler.getSettings().getChromaKeyingColor();
-            if (color != null) {
-                return 0;
-            }
-        }
-        return value;
-    }
+    //$$ private int forceSkyWhenChromaKeying(int value) {
+    //$$     EntityRendererHandler handler = ((EntityRendererHandler.IEntityRenderer) this.client.gameRenderer).replayModRender_getHandler();
+    //$$     if (handler != null) {
+    //$$         ReadableColor color = handler.getSettings().getChromaKeyingColor();
+    //$$         if (color != null) {
+    //$$             return 0;
+    //$$         }
+    //$$     }
+    //$$     return value;
+    //$$ }
     //#endif
 }

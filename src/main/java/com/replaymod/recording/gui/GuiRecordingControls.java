@@ -16,7 +16,7 @@ import net.minecraft.client.gui.screen.GameMenuScreen;
 import net.minecraft.client.gui.screen.Screen;
 
 //#if MC>=11400
-import net.minecraft.client.gui.widget.AbstractButtonWidget;
+import net.minecraft.client.gui.widget.ClickableWidget;
 //#endif
 
 import java.util.Collection;
@@ -79,7 +79,7 @@ public class GuiRecordingControls extends EventRegistrations {
     { on(InitScreenCallback.EVENT, this::injectIntoIngameMenu); }
     private void injectIntoIngameMenu(Screen guiScreen,
                                       //#if MC>=11400
-                                      Collection<AbstractButtonWidget> buttonList
+                                      Collection<ClickableWidget> buttonList
                                       //#else
                                       //$$ Collection<net.minecraft.client.gui.GuiButton> buttonList
                                       //#endif
@@ -94,7 +94,7 @@ public class GuiRecordingControls extends EventRegistrations {
                 MCVer.findButton(buttonList, "menu.returnToMenu", 1)
                         .map(Optional::of)
                         .orElse(MCVer.findButton(buttonList, "menu.disconnect", 1))
-                        .<Function<Integer, Integer>>map(it -> (height) -> it.y)
+                        .<Function<Integer, Integer>>map(it -> (height) -> it.getY())
                         .orElse((height) -> height / 4 + 120 - 16);
         VanillaGuiScreen vanillaGui = VanillaGuiScreen.wrap(guiScreen);
         vanillaGui.setLayout(new CustomLayout<de.johni0702.minecraft.gui.container.GuiScreen>(vanillaGui.getLayout()) {
